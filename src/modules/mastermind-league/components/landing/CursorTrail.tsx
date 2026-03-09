@@ -2,102 +2,119 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const TRAIL_LENGTH = 6;
-const PARTICLE_SIZE = 5;
-const MOVE_THRESHOLD = 14;
-const FADE_MS = 200;
-const PRUNE_MS = 260;
+// ── Coin trail config ──────────────────────────────────────────────────────
+const MAX_COINS     = 10;       // max simultaneous coins on screen
+const COIN_LIFE_MS  = 800;      // how long each coin lives
+const EMIT_DELAY_MS = 85;       // min ms between emitting new coins
+const PRUNE_MS      = 60;       // garbage-collect interval
+const FLOAT_PX      = 32;       // how far each coin drifts upward
 
-interface TrailPoint {
+interface Coin {
+  id: number;
   x: number;
   y: number;
-  id: number;
-  driftX: number;
-  driftY: number;
+  drift: number;   // horizontal drift (-1 … 1)
+  size: number;    // diameter in px
   createdAt: number;
 }
 
-function TrailParticle({ point }: { point: TrailPoint }) {
-  const age = Date.now() - point.createdAt;
-  const opacity = Math.max(0, 1 - age / FADE_MS);
-  const drift = Math.min(1, age / 80) * 6;
-  const x = point.x + point.driftX * drift;
-  const y = point.y + point.driftY * drift;
+// ── Single coin renderer ───────────────────────────────────────────────────
+function CoinParticle({ coin }: { coin: Coin }) {
+  const age      = Date.now() - coin.createdAt;
+  const progress = Math.min(1, age / COIN_LIFE_MS);
+  const opacity  = Math.max(0, (1 - progress) * 0.75);
 
-  if (opacity <= 0.01) return null;
+  if (opacity < 0.01) return null;
+
+  const floatY   = progress * FLOAT_PX;
+  const driftX   = coin.drift * progress * 10;
+  const scale    = 1 - progress * 0.25;   // shrinks slightly as it rises
 
   return (
     <div
-      className="absolute rounded-full pointer-events-none"
+      className="fixed pointer-events-none select-none"
       style={{
-        left: x,
-        top: y,
-        width: PARTICLE_SIZE,
-        height: PARTICLE_SIZE,
-        marginLeft: -PARTICLE_SIZE / 2,
-        marginTop: -PARTICLE_SIZE / 2,
-        background: "radial-gradient(circle, rgba(177,201,235,0.6) 0%, rgba(20,88,134,0.25) 100%)",
-        boxShadow: "0 0 6px rgba(177,201,235,0.4)",
+        left:   coin.x + driftX - coin.size / 2,
+        top:    coin.y - floatY  - coin.size / 2,
+        width:  coin.size,
+        height: coin.size,
+        borderRadius: "50%",
+        /* Gold coin gradient with subtle 3-D rim */
+        background:
+          "radial-gradient(circle at 35% 30%, #FFE680 0%, #F6C453 45%, #C8900A 100%)",
+        border: "1px solid rgba(255, 220, 80, 0.55)",
+        boxShadow:
+          "0 0 5px rgba(246,196,83,0.5), 0 1px 3px rgba(0,0,0,0.35)",
         opacity,
-        transform: "translate(-50%, -50%)",
-        transition: "opacity 0.06s ease-out",
+        transform: `scale(${scale})`,
+        zIndex: 9999,
       }}
     />
   );
 }
 
+// ── Main component ─────────────────────────────────────────────────────────
 export function CursorTrail() {
-  const [points, setPoints] = useState<TrailPoint[]>([]);
-  const idRef = useRef(0);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const lastTime = useRef(0);
-  const rafRef = useRef<number>();
-  const pruneRef = useRef<number>();
+  const [coins, setCoins]   = useState<Coin[]>([]);
+  const idRef               = useRef(0);
+  const lastPos             = useRef({ x: 0, y: 0 });
+  const lastEmit            = useRef(0);
+  const rafRef              = useRef<number>();
+  const pruneRef            = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       const now = Date.now();
       const { clientX, clientY } = e;
+
+      // Skip emission when hovering over question cards (marked with data-no-cursor-trail)
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[data-no-cursor-trail]")) return;
+
+      // Skip if cursor barely moved
       const dx = clientX - lastPos.current.x;
       const dy = clientY - lastPos.current.y;
-      if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
-      if (now - lastTime.current < 16) return;
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
 
-      lastPos.current = { x: clientX, y: clientY };
-      lastTime.current = now;
+      // Throttle emission
+      if (now - lastEmit.current < EMIT_DELAY_MS) return;
+
+      lastPos.current  = { x: clientX, y: clientY };
+      lastEmit.current = now;
 
       rafRef.current = requestAnimationFrame(() => {
-        const newPoint: TrailPoint = {
-          x: clientX,
-          y: clientY,
-          id: idRef.current++,
-          driftX: (Math.random() - 0.5) * 2.5,
-          driftY: (Math.random() - 0.5) * 2.5,
+        const coin: Coin = {
+          id:        idRef.current++,
+          x:         clientX,
+          y:         clientY,
+          drift:     (Math.random() - 0.5) * 2,
+          size:      8 + Math.random() * 5,   // 8–13 px
           createdAt: now,
         };
-        setPoints((prev) => [...prev.slice(-TRAIL_LENGTH + 1), newPoint]);
+        setCoins((prev) => [...prev.slice(-(MAX_COINS - 1)), coin]);
       });
     };
 
+    // Remove expired coins periodically
     const prune = () => {
-      const now = Date.now();
-      setPoints((prev) => prev.filter((p) => now - p.createdAt < PRUNE_MS));
+      const cutoff = Date.now() - COIN_LIFE_MS - 50;
+      setCoins((prev) => prev.filter((c) => c.createdAt > cutoff));
     };
 
     window.addEventListener("mousemove", handleMove, { passive: true });
-    pruneRef.current = window.setInterval(prune, 50);
+    pruneRef.current = setInterval(prune, PRUNE_MS);
 
     return () => {
       window.removeEventListener("mousemove", handleMove);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current)  cancelAnimationFrame(rafRef.current);
       if (pruneRef.current) clearInterval(pruneRef.current);
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999]">
-      {points.map((p) => (
-        <TrailParticle key={p.id} point={p} />
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 9999 }}>
+      {coins.map((c) => (
+        <CoinParticle key={c.id} coin={c} />
       ))}
     </div>
   );

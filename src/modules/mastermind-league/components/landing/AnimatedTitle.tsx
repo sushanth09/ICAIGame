@@ -2,124 +2,106 @@
 
 import { motion } from "framer-motion";
 
-const EASE = [0.33, 1, 0.68, 1] as const;
+// Gold gradient — applied via CSS background-clip trick
+const GOLD: React.CSSProperties = {
+  background: "linear-gradient(135deg, #F6C453 0%, #FFB347 55%, #F6C453 100%)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  backgroundClip: "text",
+  fontFamily: "var(--font-poppins), sans-serif",
+  fontWeight: 700,
+  letterSpacing: "-0.02em",
+  lineHeight: 1.0,
+};
 
-const DIRS: Array<{ x: number; y: number; rotate: number }> = [
-  { x: -22, y: -18, rotate: -9 },
-  { x: 20, y: -12, rotate: 6 },
-  { x: -16, y: 12, rotate: -6 },
-  { x: 18, y: -14, rotate: 5 },
-  { x: -28, y: 2, rotate: -7 },
-  { x: 22, y: 16, rotate: 7 },
-  { x: -12, y: -22, rotate: -4 },
-  { x: 16, y: 10, rotate: 5 },
-  { x: -22, y: 14, rotate: -6 },
-  { x: 26, y: -10, rotate: 7 },
-  { x: -14, y: -20, rotate: -5 },
-  { x: 20, y: 6, rotate: 4 },
-  { x: -20, y: 20, rotate: -6 },
-  { x: 24, y: -17, rotate: 6 },
-  { x: -16, y: -12, rotate: -4 },
-  { x: 18, y: 16, rotate: 5 },
-  { x: -10, y: 22, rotate: -5 },
-  { x: 14, y: -18, rotate: 4 },
-];
-
-function dir(i: number) {
-  return DIRS[i % DIRS.length];
-}
-
-const LINE1 = "MASTERMIND".split("");
-const LINE2 = "LEAGUE".split("");
-
-const SHIMMER_STYLE = {
+// Shimmer sweep style
+const SHIMMER: React.CSSProperties = {
   background:
-    "linear-gradient(90deg, transparent, rgba(255,189,89,0.8), rgba(255,255,255,0.4), rgba(255,189,89,0.8), transparent)",
-  boxShadow: "0 0 12px rgba(255,189,89,0.5)",
+    "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 40%, rgba(255,220,100,0.65) 50%, rgba(255,255,255,0.5) 60%, transparent 100%)",
 };
 
 export function AnimatedTitle() {
   return (
-    <div className="relative inline-block mb-10">
-      <div className="overflow-visible">
-        {/* MASTERMIND */}
-        <div className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-tight mb-1">
-          {LINE1.map((letter, i) => (
-            <motion.span
-              key={`1-${i}`}
-              initial={{
-                opacity: 0,
-                x: dir(i).x,
-                y: dir(i).y,
-                rotate: dir(i).rotate,
-                scale: 0.55,
-              }}
-              animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-              transition={{ duration: 0.88, delay: 0.4 + i * 0.055, ease: EASE }}
-              style={{ willChange: "transform, opacity", display: "inline-block", color: "#E8E9E4" }}
-            >
-              {letter}
-            </motion.span>
-          ))}
-        </div>
-
-        {/* LEAGUE with gold glow */}
-        <div className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
-          {LINE2.map((letter, i) => (
-            <motion.span
-              key={`2-${i}`}
-              initial={{
-                opacity: 0,
-                x: dir(i + 10).x,
-                y: dir(i + 10).y,
-                rotate: dir(i + 10).rotate,
-                scale: 0.55,
-              }}
-              animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-              transition={{ duration: 0.88, delay: 0.95 + i * 0.07, ease: EASE }}
-              style={{
-                willChange: "transform, opacity",
-                display: "inline-block",
-                color: "#FFBD59",
-                filter: "drop-shadow(0 0 8px rgba(255,189,89,0.4))",
-              }}
-            >
-              {letter}
-            </motion.span>
-          ))}
-        </div>
+    /*
+      Spring config for "bus braking" effect:
+      - High stiffness (250): rushes in fast
+      - Low damping (18): pronounced overshoot → bounce back → settle
+      - mass 1.0, delay 2.2s to follow the ICAI zoom animation
+      - Total visible motion ≈ 1.6 s
+    */
+    <motion.div
+      initial={{ x: "-75vw", opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{
+        type: "spring",
+        stiffness: 250,
+        damping: 18,
+        mass: 1.0,
+        delay: 2.2,
+      }}
+      className="relative text-center"
+      style={{ overflow: "visible" }}
+    >
+      {/* MASTERMIND */}
+      <div
+        className="select-none"
+        style={{
+          ...GOLD,
+          fontSize: "clamp(3rem, 9.5vw, 7.5rem)",
+        }}
+      >
+        MASTERMIND
       </div>
 
-      {/* Horizontal shimmer sweep after assembly */}
+      {/* LEAGUE — slightly larger for visual dominance */}
+      <div
+        className="select-none"
+        style={{
+          ...GOLD,
+          fontSize: "clamp(3.4rem, 11vw, 8.6rem)",
+          marginTop: "-0.05em",
+        }}
+      >
+        LEAGUE
+      </div>
+
+      {/* Shimmer sweep — fires once after spring settles, then loops every 9 s */}
       <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ overflow: "hidden" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.9, duration: 0.2 }}
-        className="absolute inset-0 overflow-hidden pointer-events-none"
+        transition={{ delay: 4.2, duration: 0.1 }}
       >
         <motion.div
+          className="absolute top-0 bottom-0 w-1/3"
+          style={SHIMMER}
           initial={{ x: "-100%" }}
-          animate={{ x: "210%" }}
-          transition={{ duration: 1.1, delay: 2.0, ease: [0.4, 0, 0.2, 1] }}
-          className="absolute top-1/2 -translate-y-1/2 w-2/5 h-px"
-          style={{ ...SHIMMER_STYLE, willChange: "transform" }}
+          animate={{ x: "450%" }}
+          transition={{
+            duration: 1.0,
+            delay: 4.3,
+            ease: [0.4, 0, 0.2, 1],
+            repeat: Infinity,
+            repeatDelay: 8.5,
+          }}
         />
       </motion.div>
 
-      {/* Subtle glow aura under the title */}
+      {/* Ambient glow beneath the title — fades in after spring settles */}
       <motion.div
-        initial={{ opacity: 0, scaleX: 0.2 }}
+        initial={{ opacity: 0, scaleX: 0.3 }}
         animate={{ opacity: 1, scaleX: 1 }}
-        transition={{ delay: 2.15, duration: 1, ease: EASE }}
+        transition={{ delay: 3.8, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
         className="absolute -bottom-2 left-0 right-0 pointer-events-none"
         style={{
-          height: 40,
+          height: 44,
           background:
-            "radial-gradient(ellipse at 50% 100%, rgba(255,189,89,0.2) 0%, transparent 70%)",
-          filter: "blur(8px)",
+            "radial-gradient(ellipse at 50% 100%, rgba(246,196,83,0.2) 0%, transparent 70%)",
+          filter: "blur(10px)",
           transformOrigin: "center",
         }}
       />
-    </div>
+    </motion.div>
   );
 }

@@ -11,11 +11,23 @@
   --icai-dark-grey: #0F0E0C;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: var(--font-poppins), 'Poppins', system-ui, sans-serif;
   background: linear-gradient(160deg, #0F0E0C 0%, #0A0147 40%, #145886 100%);
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   color: #E8E9E4;
+}
+
+#__next,
+[data-nextjs-scroll-focus-boundary] {
+  height: 100%;
+  overflow: hidden;
 }
 
 /* === KEYFRAME ANIMATIONS === */

@@ -5,6 +5,7 @@ import type { GamePhase } from "../types/gameTypes";
 
 interface GameStore {
   score: number;
+  roundScores: [number, number, number];
   currentRound: 1 | 2 | 3;
   currentQuestionIndex: number;
   timeRemaining: number;
@@ -14,6 +15,7 @@ interface GameStore {
 
   setPhase: (phase: GamePhase) => void;
   setScore: (score: number) => void;
+  setRoundScore: (round: 1 | 2 | 3, score: number) => void;
   setCurrentRound: (round: 1 | 2 | 3) => void;
   setCurrentQuestionIndex: (index: number) => void;
   setTimeRemaining: (time: number) => void;
@@ -27,6 +29,7 @@ interface GameStore {
 
 const initialState = {
   score: 0,
+  roundScores: [0, 0, 0] as [number, number, number],
   currentRound: 1 as 1 | 2 | 3,
   currentQuestionIndex: 0,
   timeRemaining: 0,
@@ -40,6 +43,12 @@ export const useGameStore = create<GameStore>((set) => ({
 
   setPhase: (phase) => set({ phase }),
   setScore: (score) => set({ score }),
+  setRoundScore: (round, roundScore) =>
+    set((state) => {
+      const newRoundScores = [...state.roundScores] as [number, number, number];
+      newRoundScores[round - 1] = roundScore;
+      return { roundScores: newRoundScores };
+    }),
   setCurrentRound: (currentRound) => set({ currentRound }),
   setCurrentQuestionIndex: (currentQuestionIndex) => set({ currentQuestionIndex }),
   setTimeRemaining: (timeRemaining) => set({ timeRemaining }),

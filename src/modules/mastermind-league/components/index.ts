@@ -18,3 +18,5 @@ export {
 } from "./QuestionCard";
 export type { AnswerFeedback } from "./QuestionCard";
 export { TabBlockerOverlay } from "./TabBlockerOverlay";
+export { SoundToggle } from "./SoundToggle";
+export { GlobalSoundToggle } from "./GlobalSoundToggle";

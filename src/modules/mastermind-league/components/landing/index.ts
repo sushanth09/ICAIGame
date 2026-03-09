@@ -3,3 +3,5 @@ export { HolographicQuoteCard } from "./HolographicQuoteCard";
 export { EnhancedStartButton } from "./EnhancedStartButton";
 export { WarpTransition } from "./WarpTransition";
 export { CursorTrail } from "./CursorTrail";
+export { LightBackground } from "./LightBackground";
+export { AudioToggle } from "./AudioToggle";

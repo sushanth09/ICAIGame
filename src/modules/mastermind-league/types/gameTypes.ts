@@ -33,8 +33,9 @@ export interface Round2Question {
 
 export interface Round3Question {
   id: string;
-  text: string; // abbreviation or definition
-  correctAnswer: string; // the term
+  text: string;
+  options: MCQOption[];
+  correctAnswer: string; // option id: A, B, C, or D
 }
 
 export type Question = Round1Question | Round2Question | Round3Question;

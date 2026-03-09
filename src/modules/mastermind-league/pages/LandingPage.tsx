@@ -4,15 +4,33 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AnimatedTitle,
-  HolographicQuoteCard,
   EnhancedStartButton,
   WarpTransition,
-  CursorTrail,
 } from "../components/landing";
-import { SpotlightBackground } from "../components/SpotlightBackground";
 import { VideoBackground } from "../components/VideoBackground";
 
-const EASE = [0.33, 1, 0.68, 1] as const;
+// ── Shared easing & font ───────────────────────────────────────────────────
+const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+const PP: React.CSSProperties = { fontFamily: "var(--font-poppins), sans-serif" };
+
+// ── Motion presets ─────────────────────────────────────────────────────────
+const slideUp = (delay: number, duration = 1.2) => ({
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay, duration, ease: EASE_OUT },
+});
+
+const slideFromRight = (delay: number, duration = 1.2) => ({
+  initial: { opacity: 0, x: 70 },
+  animate: { opacity: 1, x: 0 },
+  transition: { delay, duration, ease: EASE_OUT },
+});
+
+const fadeIn = (delay: number, duration = 1.0) => ({
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: { delay, duration, ease: "easeOut" as const },
+});
 
 interface LandingPageProps {
   onStart: () => void;
@@ -20,174 +38,133 @@ interface LandingPageProps {
   nextQuarterInfo?: string;
 }
 
-export function LandingPage({ onStart, canPlay = true, nextQuarterInfo }: LandingPageProps) {
+export function LandingPage({ onStart, canPlay = true }: LandingPageProps) {
   const [isWarping, setIsWarping] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  const handleStartClick = () => {
-    if (!canPlay) return;
-    setIsWarping(true);
-  };
+  const handleStartClick = () => { if (!canPlay) return; setIsWarping(true); };
+  const handleWarpComplete = () => { setIsWarping(false); onStart(); };
 
-  const handleWarpComplete = () => {
-    setIsWarping(false);
-    onStart();
-  };
-
+  // SSR skeleton — matches the mounted layout exactly
   if (!mounted) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4">
-        <p className="text-icai-light-blue text-lg md:text-xl mb-2 tracking-widest uppercase text-sm">
-          ICAI Atlanta Chapter
+      <div className="w-full h-full flex flex-col items-center justify-center text-center px-6">
+        <p style={{ ...PP, color: "#E5E7EB", fontSize: "1rem", letterSpacing: "0.15em", fontWeight: 500 }}>
+          ICAI ATLANTA CHAPTER
         </p>
-        <p className="text-icai-light-blue/50 text-xs mb-8 tracking-[0.3em]">PRESENTS</p>
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-icai-light-grey mb-3 tracking-tight leading-tight">
-          MASTERMIND
-          <br />
-          <span className="text-icai-yellow">LEAGUE</span>
+        <p style={{ ...PP, color: "#F6C453", fontSize: "0.85rem", letterSpacing: "0.2em", fontStyle: "italic" }}>
+          Presents
+        </p>
+        <h1 style={{ ...PP, color: "#F6C453", fontSize: "clamp(3rem,9vw,7rem)", fontWeight: 700, lineHeight: 1, marginTop: "1rem" }}>
+          MASTERMIND<br />LEAGUE
         </h1>
-        <p className="text-icai-light-blue text-lg md:text-xl font-medium mb-8">
-          The Quarterly Knowledge Challenge
-        </p>
       </div>
     );
   }
 
   return (
     <>
+      {/* Video background — unique to landing; SpotlightBackground+CursorTrail come from GameLayout */}
       <VideoBackground />
-      <SpotlightBackground />
-      <CursorTrail />
 
+      {/* Warp overlay */}
       <AnimatePresence>
-        {isWarping && (
-          <WarpTransition key="warp" onComplete={handleWarpComplete} />
-        )}
+        {isWarping && <WarpTransition key="warp" onComplete={handleWarpComplete} />}
       </AnimatePresence>
 
-      <div className="min-h-[92vh] flex flex-col items-center justify-center text-center px-4 relative" style={{ zIndex: 1 }}>
-        {/* Top badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.7, ease: EASE }}
-          className="mb-2"
+      {/* First Edition badge — slides from right */}
+      <motion.div
+        {...slideFromRight(3.6, 1.2)}
+        className="fixed top-4 right-5 z-40"
+      >
+        <div
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
+          style={{
+            background: "rgba(246,196,83,0.1)",
+            border: "1px solid rgba(246,196,83,0.35)",
+            boxShadow: "0 0 14px rgba(246,196,83,0.12)",
+          }}
         >
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase"
-            style={{
-              background: "rgba(20, 88, 134, 0.25)",
-              border: "1px solid rgba(177, 201, 235, 0.25)",
-              color: "#B1C9EB",
-            }}
-          >
-            <motion.span
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-1.5 h-1.5 rounded-full bg-icai-yellow inline-block"
-            />
+          <motion.span
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-1.5 h-1.5 rounded-full inline-block flex-shrink-0"
+            style={{ background: "#F6C453" }}
+          />
+          <span style={{ ...PP, color: "#F6C453", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" }}>
             First Edition · April 2026
-          </div>
-        </motion.div>
+          </span>
+        </div>
+      </motion.div>
 
-        <motion.section
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.7, ease: EASE }}
-          className="mb-1"
+      {/* Hero — fills the available height, centered */}
+      <div
+        className="w-full h-full flex flex-col items-center justify-center text-center px-6 gap-5 md:gap-6"
+        style={{ position: "relative", zIndex: 1 }}
+      >
+        {/* 1. ICAI Atlanta Chapter Presents — cinematic zoom */}
+        <motion.div
+          initial={{ scale: 4.2, opacity: 0 }}
+          animate={{ scale: [4.2, 2.4, 1.9, 1.0], opacity: [0, 1, 1, 1], y: [0, -6, -4, 0] }}
+          transition={{ duration: 2.2, times: [0, 0.25, 0.60, 1.0], ease: "easeOut" }}
+          style={{ transformOrigin: "50% 50%" }}
         >
-          <p className="text-icai-light-blue/90 text-xs md:text-sm tracking-[0.35em] uppercase font-semibold">
+          <p style={{ ...PP, color: "#E5E7EB", fontSize: "clamp(0.95rem,2.2vw,1.5rem)", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", lineHeight: 1.4 }}>
             ICAI Atlanta Chapter
           </p>
-        </motion.section>
+          <p style={{ ...PP, color: "#F6C453", fontSize: "clamp(0.75rem,1.6vw,1.15rem)", fontWeight: 400, letterSpacing: "0.3em", fontStyle: "italic", lineHeight: 1.4 }}>
+            Presents
+          </p>
+        </motion.div>
 
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="mb-10"
-        >
-          <p className="text-icai-light-blue/40 text-xs tracking-[0.5em] uppercase">Presents</p>
-        </motion.section>
-
-        {/* Animated main title */}
+        {/* 2. MASTERMIND LEAGUE */}
         <AnimatedTitle />
 
-        {/* Subtitle pill */}
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ delay: 2.05, duration: 0.9, ease: EASE }}
-          style={{ transformOrigin: "center" }}
-          className="mb-12"
-        >
-          <div className="relative inline-flex items-center gap-3 px-6 py-2.5 overflow-hidden rounded-full">
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: "rgba(255, 189, 89, 0.08)",
-                border: "1px solid rgba(255, 189, 89, 0.35)",
-              }}
-            />
+        {/* 3. Quarterly Knowledge Challenge pill */}
+        <motion.div {...slideUp(4.4, 1.2)}>
+          <div
+            className="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full overflow-hidden"
+            style={{ background: "rgba(246,196,83,0.07)", border: "1px solid rgba(246,196,83,0.28)" }}
+          >
             <motion.div
               className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(105deg, transparent 20%, rgba(255,189,89,0.15) 50%, transparent 80%)",
-              }}
-              animate={{ x: ["-120%", "220%"] }}
-              transition={{ duration: 3, repeat: Infinity, repeatDelay: 4, ease: "linear", delay: 2.5 }}
+              style={{ background: "linear-gradient(105deg, transparent 20%, rgba(246,196,83,0.14) 50%, transparent 80%)" }}
+              animate={{ x: ["-130%", "230%"] }}
+              transition={{ duration: 3, repeat: Infinity, repeatDelay: 5, ease: "linear", delay: 5.5 }}
             />
-            <span className="relative text-icai-yellow text-xs md:text-sm font-semibold tracking-[0.2em] uppercase">
-              ✦ The Quarterly Knowledge Challenge ✦
+            <span style={{ ...PP, color: "#F6C453", fontSize: "clamp(0.65rem,1.3vw,0.82rem)", fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+              ✦&nbsp;&nbsp;The Quarterly Knowledge Challenge&nbsp;&nbsp;✦
             </span>
           </div>
         </motion.div>
 
-        <HolographicQuoteCard>
-          &ldquo;Knowledge is the new currency. Are you ready to prove your worth?&rdquo;
-        </HolographicQuoteCard>
+        {/* 4. Quote */}
+        <motion.p
+          {...fadeIn(5.2, 1.0)}
+          className="max-w-2xl"
+          style={{ ...PP, color: "#D1D5DB", fontSize: "clamp(0.85rem,1.5vw,1.05rem)", fontWeight: 400, fontStyle: "italic", lineHeight: 1.7 }}
+        >
+          <span style={{ color: "#F6C453", opacity: 0.55, fontSize: "1.5em", lineHeight: 0, verticalAlign: "middle" }}>❝&nbsp;</span>
+          Knowledge is the new currency. Are you ready to prove your worth?
+          <span style={{ color: "#F6C453", opacity: 0.55, fontSize: "1.5em", lineHeight: 0, verticalAlign: "middle" }}>&nbsp;❞</span>
+        </motion.p>
 
-        <section className="flex flex-col items-center">
-          {!canPlay && nextQuarterInfo && (
+        {/* 5. CTA button */}
+        <div className="flex flex-col items-center gap-2">
+          {!canPlay && (
             <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-icai-yellow/90 text-sm mb-4 font-medium"
+              {...fadeIn(5.6)}
+              style={{ ...PP, color: "#F6C453", fontSize: "0.875rem", fontWeight: 500 }}
             >
               You&apos;ve already played this quarter. Come back next quarter!
             </motion.p>
           )}
-          <EnhancedStartButton onClick={handleStartClick} disabled={!canPlay}>
-            {canPlay ? "START GAME" : "ALREADY PLAYED"}
+          <EnhancedStartButton onClick={handleStartClick} disabled={!canPlay} delay={5.8}>
+            {canPlay ? "Enter the League ⚡" : "Already Played"}
           </EnhancedStartButton>
-        </section>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.45 }}
-          transition={{ delay: 3.2, duration: 1.5 }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-        >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-            className="flex flex-col items-center gap-1"
-          >
-            <div
-              className="w-px h-8"
-              style={{
-                background: "linear-gradient(to bottom, transparent, rgba(177,201,235,0.6))",
-              }}
-            />
-            <div className="w-1.5 h-1.5 rounded-full bg-icai-light-blue/60" />
-          </motion.div>
-        </motion.div>
+        </div>
       </div>
     </>
   );

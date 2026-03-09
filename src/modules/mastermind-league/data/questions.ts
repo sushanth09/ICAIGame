@@ -90,20 +90,116 @@ export const round2Questions: Round2Question[] = [
   },
 ];
 
-// ROUND 3 — LIGHTNING ROUND
+// ROUND 3 — LIGHTNING ROUND (MCQ format)
 export const round3Questions: Round3Question[] = [
-  { id: "r3q1", text: "Balance Sheet", correctAnswer: "Balance Sheet" },
-  { id: "r3q2", text: "Return on Equity", correctAnswer: "ROE" },
+  {
+    id: "r3q1",
+    text: "What is another name for the 'Statement of Financial Position'?",
+    options: [
+      { id: "A", text: "Income Statement" },
+      { id: "B", text: "Cash Flow Statement" },
+      { id: "C", text: "Balance Sheet" },
+      { id: "D", text: "Statement of Changes in Equity" },
+    ],
+    correctAnswer: "C",
+  },
+  {
+    id: "r3q2",
+    text: "ROE stands for:",
+    options: [
+      { id: "A", text: "Revenue on Equity" },
+      { id: "B", text: "Return on Equity" },
+      { id: "C", text: "Rate of Earnings" },
+      { id: "D", text: "Return on Expenses" },
+    ],
+    correctAnswer: "B",
+  },
   {
     id: "r3q3",
-    text: "Earnings Before Interest Taxes Depreciation and Amortization",
-    correctAnswer: "EBITDA",
+    text: "EBITDA stands for Earnings Before Interest, Taxes, Depreciation, and:",
+    options: [
+      { id: "A", text: "Assets" },
+      { id: "B", text: "Accounts" },
+      { id: "C", text: "Amortization" },
+      { id: "D", text: "Allocation" },
+    ],
+    correctAnswer: "C",
   },
-  { id: "r3q4", text: "Unqualified Opinion", correctAnswer: "Unqualified Opinion" },
-  { id: "r3q5", text: "GST", correctAnswer: "Goods and Services Tax" },
-  { id: "r3q6", text: "Going Concern", correctAnswer: "Going Concern" },
-  { id: "r3q7", text: "Asset Turnover Ratio", correctAnswer: "Asset Turnover Ratio" },
-  { id: "r3q8", text: "25–30%", correctAnswer: "Audit Fees" },
-  { id: "r3q9", text: "Audit Report", correctAnswer: "Audit Report" },
-  { id: "r3q10", text: "Operating Margin", correctAnswer: "Operating Margin" },
+  {
+    id: "r3q4",
+    text: "An audit opinion issued when financial statements are free from material misstatement is called:",
+    options: [
+      { id: "A", text: "Qualified Opinion" },
+      { id: "B", text: "Adverse Opinion" },
+      { id: "C", text: "Disclaimer of Opinion" },
+      { id: "D", text: "Unqualified Opinion" },
+    ],
+    correctAnswer: "D",
+  },
+  {
+    id: "r3q5",
+    text: "GST stands for:",
+    options: [
+      { id: "A", text: "General Sales Tax" },
+      { id: "B", text: "Goods and Services Tax" },
+      { id: "C", text: "Government Standard Tax" },
+      { id: "D", text: "Gross Service Tax" },
+    ],
+    correctAnswer: "B",
+  },
+  {
+    id: "r3q6",
+    text: "The assumption that a business will continue to operate indefinitely is called:",
+    options: [
+      { id: "A", text: "Accrual Concept" },
+      { id: "B", text: "Consistency Principle" },
+      { id: "C", text: "Going Concern" },
+      { id: "D", text: "Materiality Concept" },
+    ],
+    correctAnswer: "C",
+  },
+  {
+    id: "r3q7",
+    text: "Which ratio measures how efficiently a company uses its assets to generate sales revenue?",
+    options: [
+      { id: "A", text: "Current Ratio" },
+      { id: "B", text: "Debt-to-Equity Ratio" },
+      { id: "C", text: "Gross Profit Margin" },
+      { id: "D", text: "Asset Turnover Ratio" },
+    ],
+    correctAnswer: "D",
+  },
+  {
+    id: "r3q8",
+    text: "Under ICAI guidelines, the cap on audit fees from a single client as a percentage of total fee income is:",
+    options: [
+      { id: "A", text: "50–60%" },
+      { id: "B", text: "10–15%" },
+      { id: "C", text: "25–30%" },
+      { id: "D", text: "35–40%" },
+    ],
+    correctAnswer: "C",
+  },
+  {
+    id: "r3q9",
+    text: "The formal document issued by an auditor summarizing audit findings is called:",
+    options: [
+      { id: "A", text: "Trial Balance" },
+      { id: "B", text: "Audit Report" },
+      { id: "C", text: "Balance Sheet" },
+      { id: "D", text: "Management Letter" },
+    ],
+    correctAnswer: "B",
+  },
+  {
+    id: "r3q10",
+    text: "Operating Profit divided by Revenue equals:",
+    options: [
+      { id: "A", text: "Net Profit Margin" },
+      { id: "B", text: "Gross Margin" },
+      { id: "C", text: "EBITDA Margin" },
+      { id: "D", text: "Operating Margin" },
+    ],
+    correctAnswer: "D",
+  },
 ];

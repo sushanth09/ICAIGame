@@ -16,15 +16,128 @@ import { validateRound2Answer, createAnswer } from "../engine/gameEngine";
 import { saveGameState } from "../services/gameService";
 import { useGameTimer } from "../hooks/useGameTimer";
 import { useTabSwitchDetection } from "../hooks/useTabSwitchDetection";
+import { useSoundEffects } from "../hooks/useSoundSystem";
 
 const TIME_PER_QUESTION = 20;
 const FEEDBACK_DURATION_MS = 1600;
+const ROUND_SUMMARY_MS = 3000;
 
 const EASE = [0.33, 1, 0.68, 1] as const;
 
+// ── Round summary overlay ────────────────────────────────────────────────────
+function RoundSummaryOverlay({
+  score,
+  maxScore,
+  onDone,
+}: {
+  score: number;
+  maxScore: number;
+  onDone: () => void;
+}) {
+  const topScore = Math.min(maxScore, score + 5 + Math.floor(Math.random() * 8));
+  const avgScore = Math.max(0, Math.floor(score * 0.73 + Math.random() * 4));
+  const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
+  const topPct = maxScore > 0 ? (topScore / maxScore) * 100 : 0;
+  const avgPct = maxScore > 0 ? (avgScore / maxScore) * 100 : 0;
+
+  useEffect(() => {
+    const t = setTimeout(onDone, ROUND_SUMMARY_MS);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="fixed inset-0 flex items-center justify-center z-50"
+      style={{ background: "rgba(4,6,20,0.85)", backdropFilter: "blur(12px)" }}
+    >
+      <motion.div
+        initial={{ scale: 0.88, y: 30, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.94, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 260, damping: 22 }}
+        className="rounded-2xl p-8 w-full max-w-sm mx-4"
+        style={{
+          background: "linear-gradient(148deg, rgba(8,12,35,0.97) 0%, rgba(4,6,20,0.99) 100%)",
+          border: "1px solid rgba(255,189,89,0.35)",
+          boxShadow: "0 0 40px rgba(255,189,89,0.12), 0 20px 60px rgba(0,0,0,0.5)",
+        }}
+      >
+        <div className="text-center mb-5">
+          <motion.div
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 350, damping: 18, delay: 0.15 }}
+            className="text-5xl mb-2"
+          >
+            ⚖️
+          </motion.div>
+          <h3 className="text-xl font-black tracking-wide" style={{ color: "#FFBD59" }}>
+            Round 2 Complete!
+          </h3>
+          <p className="text-icai-light-blue/55 text-xs tracking-widest uppercase mt-1">
+            Myth or Fact
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {[
+            { label: "Your Score", value: score, pct, color: "#FFBD59", highlight: true },
+            { label: "Top Score", value: topScore, pct: topPct, color: "#B1C9EB", highlight: false },
+            { label: "Avg Score", value: avgScore, pct: avgPct, color: "rgba(177,201,235,0.4)", highlight: false },
+          ].map(({ label, value, pct: p, color, highlight }) => (
+            <div key={label}>
+              <div className="flex justify-between items-center mb-1">
+                <span
+                  className={`text-xs font-semibold ${
+                    highlight ? "text-icai-yellow" : "text-icai-light-blue/60"
+                  }`}
+                >
+                  {label}
+                </span>
+                <span
+                  className={`text-sm font-black tabular-nums ${
+                    highlight ? "text-icai-yellow" : "text-icai-light-blue/70"
+                  }`}
+                >
+                  {value}
+                </span>
+              </div>
+              <div
+                className="h-2.5 rounded-full overflow-hidden"
+                style={{ background: "rgba(20,88,134,0.2)" }}
+              >
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${p}%` }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                  style={{
+                    background: color,
+                    boxShadow: highlight ? `0 0 8px ${color}60` : undefined,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-center text-xs text-icai-light-blue/40">
+          Advancing to Lightning Round…
+        </p>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 export function Round2Page() {
   const {
     score,
+    roundScores,
     currentQuestionIndex,
     setPhase,
     addScore,
@@ -32,24 +145,39 @@ export function Round2Page() {
     setCurrentRound,
     setCurrentQuestionIndex,
     setTimeRemaining,
+    setRoundScore,
   } = useGameStore();
 
   const [answered, setAnswered] = useState(false);
   const [feedback, setFeedback] = useState<AnswerFeedback>(null);
+  const [showSummary, setShowSummary] = useState(false);
   const { tabHidden, acknowledgeLeave } = useTabSwitchDetection(true);
   const timeRemaining = useGameStore((s) => s.timeRemaining);
+  const { playCorrect, playWrong, playTransition } = useSoundEffects();
 
   const question = round2Questions[currentQuestionIndex];
   const totalQuestions = round2Questions.length;
   const isLastQuestion = currentQuestionIndex >= totalQuestions - 1;
+  const isCritical = timeRemaining <= 5 && timeRemaining > 0;
 
-  const advanceRound = useCallback(() => {
+  const doAdvance = useCallback(() => {
+    playTransition();
+    setRoundScore(2, score - roundScores[0]);
     setPhase("round3");
     setCurrentRound(3);
     setCurrentQuestionIndex(0);
     setTimeRemaining(60);
-    saveGameState({ phase: "round3", currentRound: 3, currentQuestionIndex: 0, timeRemaining: 60 });
-  }, [setPhase, setCurrentRound, setCurrentQuestionIndex, setTimeRemaining]);
+    saveGameState({
+      phase: "round3",
+      currentRound: 3,
+      currentQuestionIndex: 0,
+      timeRemaining: 60,
+    });
+  }, [score, roundScores, setRoundScore, setPhase, setCurrentRound, setCurrentQuestionIndex, setTimeRemaining, playTransition]);
+
+  const advanceRound = useCallback(() => {
+    setShowSummary(true);
+  }, []);
 
   useGameTimer(true, () => {
     if (!answered && question) {
@@ -80,6 +208,7 @@ export function Round2Page() {
     setFeedback({ correct, points });
     createAnswer(question.id, answer, correct, 2);
     saveGameState({ score: score + points });
+    if (correct) playCorrect(); else playWrong();
     setTimeout(() => {
       if (isLastQuestion) advanceRound();
       else {
@@ -96,7 +225,37 @@ export function Round2Page() {
   return (
     <>
       <TabBlockerOverlay visible={tabHidden} onAcknowledge={acknowledgeLeave} />
-      <div className="max-w-3xl mx-auto space-y-5">
+
+      {/* Screen border flash on time critical */}
+      <AnimatePresence>
+        {isCritical && (
+          <motion.div
+            key="screen-warning"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.6, 0] }}
+            transition={{ duration: 0.7, repeat: Infinity, ease: "easeInOut" }}
+            className="fixed inset-0 pointer-events-none z-40"
+            style={{
+              boxShadow: "inset 0 0 60px rgba(239,68,68,0.35)",
+              border: "3px solid rgba(239,68,68,0.5)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Round summary overlay */}
+      <AnimatePresence>
+        {showSummary && (
+          <RoundSummaryOverlay
+            score={score}
+            maxScore={totalQuestions * 10}
+            onDone={doAdvance}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="w-full h-full overflow-y-auto">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
         {/* Round header banner */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
@@ -106,7 +265,7 @@ export function Round2Page() {
           style={{
             background:
               "linear-gradient(135deg, rgba(255,189,89,0.15) 0%, rgba(10,1,71,0.7) 100%)",
-            border: "1px solid rgba(255, 189, 89, 0.35)",
+            border: "1px solid rgba(255,189,89,0.35)",
             backdropFilter: "blur(12px)",
           }}
         >
@@ -134,16 +293,18 @@ export function Round2Page() {
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.97 }}
-            transition={{ duration: 0.55, ease: EASE }}
+            transition={{ duration: 0.5, ease: EASE }}
           >
             <QuestionCardMythFact
               question={question}
               onAnswer={handleAnswer}
               disabled={answered}
               feedback={feedback}
+              timeRemaining={timeRemaining}
             />
           </motion.div>
         </AnimatePresence>
+      </div>
       </div>
     </>
   );

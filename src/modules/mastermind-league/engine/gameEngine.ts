@@ -29,31 +29,13 @@ export function validateRound2Answer(
 }
 
 /**
- * Validate Round 3 Lightning answer (case-insensitive, trimmed)
+ * Validate Round 3 MCQ answer by comparing option letter (case-insensitive)
  */
 export function validateRound3Answer(
   question: Round3Question,
   userAnswer: string
 ): boolean {
-  const normalizedUser = userAnswer.trim().toLowerCase();
-  const normalizedCorrect = question.correctAnswer.trim().toLowerCase();
-  // Exact match
-  if (normalizedUser === normalizedCorrect) return true;
-  // Also accept common abbreviations (e.g., ROE for Return on Equity)
-  if (question.correctAnswer === "ROE" && normalizedUser === "return on equity")
-    return true;
-  if (
-    question.correctAnswer === "EBITDA" &&
-    normalizedUser ===
-      "earnings before interest taxes depreciation and amortization"
-  )
-    return true;
-  if (
-    question.correctAnswer === "Goods and Services Tax" &&
-    (normalizedUser === "gst" || normalizedUser === "goods and services tax")
-  )
-    return true;
-  return false;
+  return userAnswer.toUpperCase() === question.correctAnswer.toUpperCase();
 }
 
 /**
