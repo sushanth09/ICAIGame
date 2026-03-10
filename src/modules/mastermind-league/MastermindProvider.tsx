@@ -3,7 +3,6 @@
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import { LandingPage } from "./pages/LandingPage";
-import { WelcomePage } from "./pages/WelcomePage";
 import { RulesPage } from "./pages/RulesPage";
 import { StartGamePage } from "./pages/StartGamePage";
 import { Round1Page } from "./pages/Round1Page";
@@ -26,11 +25,6 @@ export function MastermindProvider() {
 
   const handleStart = () => {
     if (!canPlay) return;
-    setPhase("welcome");
-    saveGameState({ phase: "welcome" });
-  };
-
-  const handleContinueToRules = () => {
     setPhase("rules");
     saveGameState({ phase: "rules" });
   };
@@ -74,9 +68,6 @@ export function MastermindProvider() {
             canPlay={canPlay}
             nextQuarterInfo={canPlay ? undefined : `Q${currentQuarter}`}
           />
-        )}
-        {phase === "welcome" && (
-          <WelcomePage key="welcome" onContinue={handleContinueToRules} />
         )}
         {phase === "rules" && (
           <RulesPage key="rules" onBegin={handleBeginGame} />

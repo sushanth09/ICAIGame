@@ -2,7 +2,6 @@
 
 export type GamePhase =
   | "landing"
-  | "welcome"
   | "rules"
   | "startgame"
   | "round1"
