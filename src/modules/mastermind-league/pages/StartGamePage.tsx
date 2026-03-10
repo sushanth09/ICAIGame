@@ -352,7 +352,7 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
       <motion.div
         animate={showLottie ? { opacity: 0, scale: 0.97 } : { opacity: 1, scale: 1 }}
         transition={{ duration: 0.45, ease: "easeIn" }}
-        className="w-full h-full flex flex-col items-center justify-center text-center px-6 relative overflow-hidden"
+        className="w-full min-h-full md:h-full flex flex-col items-center justify-center text-center px-6 py-8 md:py-0 relative md:overflow-hidden overflow-y-auto"
       >
         <GameBackground />
 

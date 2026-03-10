@@ -192,7 +192,7 @@ interface WelcomePageProps {
 export function WelcomePage({ onContinue }: WelcomePageProps) {
   return (
     <div
-      className="relative w-full h-full overflow-hidden flex flex-col items-center justify-center px-4"
+      className="relative w-full min-h-full md:h-full md:overflow-hidden overflow-y-auto flex flex-col items-center justify-center px-4 py-6 md:py-0"
       style={{ zIndex: 1 }}
     >
       <BackgroundElements />

@@ -15,7 +15,7 @@ interface GameLayoutProps {
 
 export function GameLayout({ children, className = "" }: GameLayoutProps) {
   return (
-    <div className="h-screen w-screen bg-icai-gradient relative overflow-hidden">
+    <div className="h-screen w-screen bg-icai-gradient relative md:overflow-hidden overflow-y-auto">
       {/* Background layers */}
       <CursorTrail />
       <ParticleBackground />
@@ -32,7 +32,7 @@ export function GameLayout({ children, className = "" }: GameLayoutProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.6, ease: EASE_SMOOTH }}
-        className={`relative w-full h-full overflow-hidden ${className}`}
+        className={`relative w-full h-full md:overflow-hidden ${className}`}
         style={{ zIndex: 2 }}
       >
         {children}
