@@ -191,7 +191,7 @@ function PointsIcon() {
 // ── Stat card data ────────────────────────────────────────────────────────────
 const STAT_ITEMS = [
   { Icon: ChartIcon,  label: "3 Rounds",    sub: "of escalating intensity" },
-  { Icon: TimerIcon,  label: "3 Minutes",   sub: "of total play time"      },
+  { Icon: TimerIcon,  label: "6 Minutes",   sub: "of total play time"      },
   { Icon: PointsIcon, label: "100 Points",  sub: "maximum score possible"  },
 ];
 
@@ -324,6 +324,10 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
   const [showLottie, setShowLottie] = useState(false);
   const calledRef = useRef(false);
 
+  useEffect(() => {
+    calledRef.current = false;
+  }, []);
+
   const triggerBegin = useCallback(() => {
     if (!calledRef.current) {
       calledRef.current = true;
@@ -363,7 +367,7 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
           transition={{ duration: 0.65, ease: EASE }}
           className="relative z-10 text-icai-light-blue text-xs md:text-sm tracking-[0.35em] uppercase mb-7 font-medium"
         >
-          ICAI Atlanta Chapter ✦ First Edition ✦ April 2026
+          ICAI Atlanta Chapter ✦ First Challenge ✦ April 2026
         </motion.p>
 
         {/* ── Cinematic headline reveal ── */}
@@ -404,7 +408,7 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.72, duration: 0.8 }}
-          className="relative z-10 text-icai-light-blue text-sm md:text-lg mb-10 max-w-sm md:max-w-md font-medium"
+          className="relative z-10 text-icai-light-blue text-sm md:text-lg mb-10 w-full max-w-4xl mx-auto font-medium text-center px-2 whitespace-normal md:whitespace-nowrap"
         >
           Three rounds. One champion. Your knowledge begins now.
         </motion.p>

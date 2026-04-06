@@ -25,17 +25,23 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
 
 export async function addToLeaderboard(
   playerName: string,
-  score: number
+  score: number,
+  options?: { chapter?: string; disqualified?: boolean }
 ): Promise<LeaderboardEntry[]> {
   const storage = getStorage();
   if (!storage) return [];
   const existing = await getLeaderboard();
+  const dq = options?.disqualified === true;
+  const sortScore = dq ? 0 : score;
   const entry: LeaderboardEntry = {
     id: `entry_${Date.now()}_${Math.random().toString(36).slice(2)}`,
     playerName: playerName || "Anonymous",
-    score,
+    score: sortScore,
     rank: 0,
     date: new Date().toISOString(),
+    chapter: options?.chapter || undefined,
+    displayScore: dq ? score : undefined,
+    disqualified: dq || undefined,
   };
   const merged = [...existing, entry]
     .sort((a, b) => b.score - a.score)

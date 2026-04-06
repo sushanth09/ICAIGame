@@ -31,7 +31,7 @@ export function GameLayout({ children, className = "" }: GameLayoutProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.6, ease: EASE_SMOOTH }}
+        transition={{ duration: 0.22, ease: EASE_SMOOTH }}
         className={`relative w-full h-full md:overflow-hidden ${className}`}
         style={{ zIndex: 2 }}
       >

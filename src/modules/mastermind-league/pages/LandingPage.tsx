@@ -35,10 +35,32 @@ const fadeIn = (delay: number, duration = 1.0) => ({
 interface LandingPageProps {
   onStart: () => void;
   canPlay?: boolean;
-  nextQuarterInfo?: string;
+  statusMessage?: string | null;
+  quarterLabel?: string | null;
+  challengeActive?: boolean;
+  deviceLocked?: boolean;
+  msUntilStart?: number;
 }
 
-export function LandingPage({ onStart, canPlay = true }: LandingPageProps) {
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return "";
+  const d = Math.floor(ms / 86400000);
+  const h = Math.floor((ms % 86400000) / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${Math.max(1, m)}m`;
+}
+
+export function LandingPage({
+  onStart,
+  canPlay = true,
+  statusMessage,
+  quarterLabel,
+  challengeActive = false,
+  deviceLocked = false,
+  msUntilStart = 0,
+}: LandingPageProps) {
   const [isWarping, setIsWarping] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -94,7 +116,7 @@ export function LandingPage({ onStart, canPlay = true }: LandingPageProps) {
             style={{ background: "#F6C453" }}
           />
           <span style={{ ...PP, color: "#F6C453", fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" }}>
-            First Edition · April 2026
+            First Challenge · April 2026
           </span>
         </div>
       </motion.div>
@@ -122,8 +144,8 @@ export function LandingPage({ onStart, canPlay = true }: LandingPageProps) {
         {/* 2. MASTERMIND LEAGUE */}
         <AnimatedTitle />
 
-        {/* 3. Quarterly Knowledge Challenge pill */}
-        <motion.div {...slideUp(4.4, 1.2)}>
+        {/* 3. Quarterly Knowledge Challenge pill + season status */}
+        <motion.div {...slideUp(4.4, 1.2)} className="flex flex-col items-center gap-2">
           <div
             className="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full overflow-hidden"
             style={{ background: "rgba(246,196,83,0.07)", border: "1px solid rgba(246,196,83,0.28)" }}
@@ -138,31 +160,44 @@ export function LandingPage({ onStart, canPlay = true }: LandingPageProps) {
               ✦&nbsp;&nbsp;The Quarterly Knowledge Challenge&nbsp;&nbsp;✦
             </span>
           </div>
+          {quarterLabel && challengeActive && canPlay && (
+            <p style={{ ...PP, color: "#B1C9EB", fontSize: "0.8rem", fontWeight: 500 }}>
+              {quarterLabel}
+            </p>
+          )}
+          {!challengeActive && msUntilStart > 0 && (
+            <p style={{ ...PP, color: "#F6C453", fontSize: "0.8rem", fontWeight: 500 }}>
+              Opens in {formatCountdown(msUntilStart)}
+            </p>
+          )}
         </motion.div>
 
         {/* 4. Quote */}
         <motion.p
           {...fadeIn(5.2, 1.0)}
-          className="max-w-2xl"
+          className="max-w-3xl"
           style={{ ...PP, color: "#D1D5DB", fontSize: "clamp(0.85rem,1.5vw,1.05rem)", fontWeight: 400, fontStyle: "italic", lineHeight: 1.7 }}
         >
           <span style={{ color: "#F6C453", opacity: 0.55, fontSize: "1.5em", lineHeight: 0, verticalAlign: "middle" }}>❝&nbsp;</span>
-          Knowledge is the new currency. Are you ready to prove your worth?
+          Knowledge is the new currency. Are you ready to become the Mastermind?
           <span style={{ color: "#F6C453", opacity: 0.55, fontSize: "1.5em", lineHeight: 0, verticalAlign: "middle" }}>&nbsp;❞</span>
         </motion.p>
 
         {/* 5. CTA button */}
-        <div className="flex flex-col items-center gap-2">
-          {!canPlay && (
+        <div className="flex flex-col items-center gap-2 max-w-md">
+          {!canPlay && statusMessage && (
             <motion.p
               {...fadeIn(5.6)}
+              className="text-center px-2"
               style={{ ...PP, color: "#F6C453", fontSize: "0.875rem", fontWeight: 500 }}
             >
-              You&apos;ve already played this quarter. Come back next quarter!
+              {deviceLocked
+                ? "You have already attempted the challenge."
+                : statusMessage}
             </motion.p>
           )}
           <EnhancedStartButton onClick={handleStartClick} disabled={!canPlay} delay={5.8}>
-            {canPlay ? "Enter the League ⚡" : "Already Played"}
+            {canPlay ? "Enter the League ⚡" : "Unavailable"}
           </EnhancedStartButton>
         </div>
       </div>

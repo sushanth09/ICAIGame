@@ -23,4 +23,10 @@ export const STORAGE_KEYS = {
   LAST_PLAYED_QUARTER: "mastermind_last_played_quarter",
   GAME_STATE: "mastermind_game_state",
   LEADERBOARD: "mastermind_leaderboard",
+  /** Completed registrations (email uniqueness). JSON array. */
+  REGISTRATIONS: "mastermind_registrations",
+  /** Device has started / completed an attempt. */
+  DEVICE_CHALLENGE_LOCK: "mastermind_device_challenge_lock",
+  /** Active session player (survives refresh mid-quiz). */
+  SESSION_PROFILE: "mastermind_session_profile",
 } as const;

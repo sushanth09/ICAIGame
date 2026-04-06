@@ -151,7 +151,23 @@ export function Round2Page() {
   const [answered, setAnswered] = useState(false);
   const [feedback, setFeedback] = useState<AnswerFeedback>(null);
   const [showSummary, setShowSummary] = useState(false);
-  const { tabHidden, acknowledgeLeave } = useTabSwitchDetection(true);
+  const handleTabViolationLimit = useCallback(() => {
+    const s = useGameStore.getState();
+    s.setRoundScore(2, s.score - s.roundScores[0]);
+    s.setDisqualified(true);
+    s.setGameCompleted(true);
+    s.setPhase("result");
+    saveGameState({
+      phase: "result",
+      gameCompleted: true,
+      disqualified: true,
+      score: s.score,
+    });
+  }, []);
+
+  const { tabHidden, acknowledgeLeave } = useTabSwitchDetection(true, {
+    onViolationLimit: handleTabViolationLimit,
+  });
   const timeRemaining = useGameStore((s) => s.timeRemaining);
   const { playCorrect, playWrong, playTransition } = useSoundEffects();
 
@@ -258,15 +274,16 @@ export function Round2Page() {
       <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
         {/* Round header banner */}
         <motion.div
-          initial={{ opacity: 0, y: -16 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: EASE }}
+          transition={{ duration: 0.35, ease: EASE }}
           className="rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{
             background:
               "linear-gradient(135deg, rgba(255,189,89,0.15) 0%, rgba(10,1,71,0.7) 100%)",
             border: "1px solid rgba(255,189,89,0.35)",
             backdropFilter: "blur(12px)",
+            transform: "translateZ(0)",
           }}
         >
           <div>
@@ -287,13 +304,14 @@ export function Round2Page() {
           label="Question"
         />
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence initial={false}>
           <motion.div
             key={question.id}
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.97 }}
-            transition={{ duration: 0.5, ease: EASE }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.28, ease: EASE }}
+            style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
           >
             <QuestionCardMythFact
               question={question}

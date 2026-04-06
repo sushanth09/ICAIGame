@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import { LandingPage } from "./pages/LandingPage";
@@ -10,32 +11,66 @@ import { Round2Page } from "./pages/Round2Page";
 import { Round3Page } from "./pages/Round3Page";
 import { ResultPage } from "./pages/ResultPage";
 import { useGameStore } from "./store/gameStore";
-import {
-  recordLastPlayedQuarter,
-  saveGameState,
-  clearGameState,
-} from "./services/gameService";
-import { getCurrentQuarter } from "./utils/helpers";
-import { useCanPlayThisQuarter } from "./hooks/useQuarterRestrictionSync";
+import { saveGameState } from "./services/gameService";
+import { useChallengeAccess } from "./hooks/useChallengeAccess";
+import { getSessionProfile } from "./services/registrationService";
+import type { PlayerProfile } from "./types/gameTypes";
+import { startGameBackgroundMusic } from "./audio/backgroundMusic";
 
 export function MastermindProvider() {
   const phase = useGameStore((s) => s.phase);
   const setPhase = useGameStore((s) => s.setPhase);
-  const { canPlay, currentQuarter } = useCanPlayThisQuarter();
+  const setPlayerProfile = useGameStore((s) => s.setPlayerProfile);
+  const {
+    canEnter,
+    challengeActive,
+    deviceLocked,
+    statusMessage,
+    quarterLabel,
+    msUntilStart,
+  } = useChallengeAccess();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const existing = getSessionProfile();
+    if (existing && !useGameStore.getState().playerProfile) {
+      setPlayerProfile(existing);
+    }
+  }, [setPlayerProfile]);
 
   const handleStart = () => {
-    if (!canPlay) return;
+    if (!canEnter) return;
     setPhase("rules");
     saveGameState({ phase: "rules" });
   };
 
-  const handleBeginGame = () => {
-    recordLastPlayedQuarter(getCurrentQuarter()).catch(() => {});
+  const handleRegistered = (profile: PlayerProfile) => {
+    setPlayerProfile(profile);
     setPhase("startgame");
-    saveGameState({ phase: "startgame" });
+    saveGameState({
+      phase: "startgame",
+      score: 0,
+      currentRound: 1,
+      currentQuestionIndex: 0,
+      timeRemaining: 30,
+      gameStarted: false,
+      gameCompleted: false,
+      disqualified: false,
+    });
+    useGameStore.setState({
+      score: 0,
+      roundScores: [0, 0, 0],
+      currentRound: 1,
+      currentQuestionIndex: 0,
+      timeRemaining: 30,
+      gameStarted: false,
+      gameCompleted: false,
+      disqualified: false,
+    });
   };
 
-  const handleActualBegin = () => {
+  const handleBeginQuiz = () => {
+    startGameBackgroundMusic();
     setPhase("round1");
     saveGameState({
       phase: "round1",
@@ -44,6 +79,11 @@ export function MastermindProvider() {
       timeRemaining: 30,
       gameStarted: true,
       score: 0,
+      disqualified: false,
+    });
+    useGameStore.setState({
+      gameStarted: true,
+      timeRemaining: 30,
     });
   };
 
@@ -60,20 +100,24 @@ export function MastermindProvider() {
           },
         }}
       />
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence initial={false}>
         {phase === "landing" && (
           <LandingPage
             key="landing"
             onStart={handleStart}
-            canPlay={canPlay}
-            nextQuarterInfo={canPlay ? undefined : `Q${currentQuarter}`}
+            canPlay={canEnter}
+            statusMessage={statusMessage}
+            quarterLabel={quarterLabel}
+            challengeActive={challengeActive}
+            deviceLocked={deviceLocked}
+            msUntilStart={msUntilStart}
           />
         )}
         {phase === "rules" && (
-          <RulesPage key="rules" onBegin={handleBeginGame} />
+          <RulesPage key="rules" onRegistered={handleRegistered} />
         )}
         {phase === "startgame" && (
-          <StartGamePage key="startgame" onBegin={handleActualBegin} />
+          <StartGamePage key="startgame" onBegin={handleBeginQuiz} />
         )}
         {phase === "round1" && <Round1Page key="round1" />}
         {phase === "round2" && <Round2Page key="round2" />}

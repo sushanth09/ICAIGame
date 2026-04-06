@@ -5,12 +5,12 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "react-countup";
 import { DotLottieReact, type DotLottie } from "@lottiefiles/dotlottie-react";
-import { AnimatedButton } from "../components/AnimatedButton";
+import { TitlesPodium } from "../components/TitlesPodium";
 import { useGameStore } from "../store/gameStore";
-import { useCanPlayThisQuarter } from "../hooks/useQuarterRestrictionSync";
+import { useChallengeAccess } from "../hooks/useChallengeAccess";
 import { addToLeaderboard, getLeaderboard } from "../services/leaderboardService";
-import { recordLastPlayedQuarter, clearGameState } from "../services/gameService";
-import { getCurrentQuarter, getCurrentYear } from "../utils/helpers";
+import { ENFORCE_SINGLE_PLAY } from "../services/registrationService";
+import { CHALLENGE_YEAR } from "../utils/challengeSchedule";
 import { round1Questions, round2Questions, round3Questions } from "../data/questions";
 import type { LeaderboardEntry } from "../types/gameTypes";
 import { useSoundEffects } from "../hooks/useSoundSystem";
@@ -21,8 +21,6 @@ const LOTTIE_SRC =
   "https://lottie.host/660f6f99-d850-4cb3-922c-323e53f0ef41/lLVJ2UU7VD.lottie";
 const TROPHY_LOTTIE_SRC =
   "https://lottie.host/188853c8-9ebc-4022-a4fb-22818baaba2e/Ns41jas4eR.lottie";
-const FIRST_PLACE_LOTTIE_SRC =
-  "https://lottie.host/14a046dc-bf45-440d-ad25-101af0645157/VAC615R8HV.lottie";
 const EASE = [0.33, 1, 0.68, 1] as const;
 
 const MAX_ROUND_SCORES = [
@@ -43,13 +41,6 @@ function getPlayerTitle(score: number) {
   if (score >= 81) return { title: "Mastermind", icon: "🧠", color: "#E8E9E4" };
   if (score >= 51) return { title: "Scholar", icon: "📚", color: "#FFBD59" };
   return { title: "Rising Star", icon: "⭐", color: "#B1C9EB" };
-}
-
-function getRankDisplay(rank: number) {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return `#${rank}`;
 }
 
 // ── Circular progress ──────────────────────────────────────────────────────────
@@ -162,59 +153,16 @@ function CoinReward({ score }: { score: number }) {
   );
 }
 
-// ── Insight bar ────────────────────────────────────────────────────────────────
-function InsightBar({
-  label,
-  value,
-  pct,
-  color,
-  icon,
-  delay,
-}: {
-  label: string;
-  value: string;
-  pct: number;
-  color: string;
-  icon: string;
-  delay: number;
-}) {
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-1.5">
-        <span className="text-icai-light-blue/70 text-xs font-medium flex items-center gap-1.5">
-          <span>{icon}</span> {label}
-        </span>
-        <span className="text-sm font-bold" style={{ color }}>
-          {value}
-        </span>
-      </div>
-      <div
-        className="h-2 rounded-full overflow-hidden"
-        style={{ background: "rgba(20,88,134,0.22)" }}
-      >
-        <motion.div
-          className="h-full rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: `${Math.max(2, pct)}%` }}
-          transition={{ duration: 1.1, ease: "easeOut", delay }}
-          style={{ background: color, boxShadow: `0 0 6px ${color}60` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ── Main page ──────────────────────────────────────────────────────────────────
 export function ResultPage() {
-  const { score, roundScores, resetGame, setPhase } = useGameStore();
-  const { canPlay, currentQuarter, currentYear } = useCanPlayThisQuarter();
+  const { score, roundScores, playerProfile, disqualified } = useGameStore();
+  const { quarterLabel } = useChallengeAccess();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showLottie, setShowLottie] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiSize, setConfettiSize] = useState({ width: 800, height: 600 });
   const [showScore, setShowScore] = useState(false);
   const [showReward, setShowReward] = useState(false);
-  const leaderboardRef = useRef<HTMLDivElement>(null);
   const lottieTransitioned = useRef(false);
   const dotLottieRef = useRef<DotLottie | null>(null);
 
@@ -230,18 +178,39 @@ export function ResultPage() {
       : roundScores;
 
   const accuracy = TOTAL_MAX > 0 ? Math.round((score / TOTAL_MAX) * 100) : 0;
-  const bestRoundIdx = effectiveRoundScores.indexOf(
-    Math.max(...effectiveRoundScores)
-  );
+  const maxRoundScore = Math.max(...effectiveRoundScores);
+  const bestRoundIndices = effectiveRoundScores
+    .map((s, i) => (s === maxRoundScore ? i : -1))
+    .filter((i) => i >= 0);
+  const bestRoundIdx = bestRoundIndices[0] ?? 0;
+  const bestRoundLabel =
+    maxRoundScore <= 0
+      ? "—"
+      : bestRoundIndices.length > 1
+        ? `Tie: ${bestRoundIndices.map((i) => `Round ${i + 1}`).join(" & ")}`
+        : `Round ${bestRoundIdx + 1}`;
 
   useEffect(() => {
-    addToLeaderboard("Player", score).then(setLeaderboard);
-    recordLastPlayedQuarter(getCurrentQuarter());
-  }, [score]);
-
-  useEffect(() => {
-    getLeaderboard().then(setLeaderboard);
-  }, []);
+    const submitKey = `mastermind_result_submitted_${playerProfile?.email ?? "anon"}`;
+    if (
+      ENFORCE_SINGLE_PLAY &&
+      typeof window !== "undefined" &&
+      sessionStorage.getItem(submitKey)
+    ) {
+      getLeaderboard().then(setLeaderboard);
+      return;
+    }
+    if (ENFORCE_SINGLE_PLAY && typeof window !== "undefined") {
+      sessionStorage.setItem(submitKey, "1");
+    }
+    const displayName = playerProfile
+      ? `${playerProfile.firstName} ${playerProfile.lastName}`.trim()
+      : "Player";
+    addToLeaderboard(displayName, score, {
+      chapter: playerProfile?.chapter ?? undefined,
+      disqualified,
+    }).then(setLeaderboard);
+  }, [score, playerProfile?.email, disqualified]);
 
   const handleLottieComplete = useCallback(() => {
     if (lottieTransitioned.current) return;
@@ -278,13 +247,6 @@ export function ResultPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handlePlayAgain = () => {
-    if (!canPlay) return;
-    clearGameState();
-    resetGame();
-    setPhase("landing");
-  };
-
   const handleShareScore = async () => {
     const text = `I scored ${score}/${TOTAL_MAX} on the ICAI Atlanta Mastermind League! 🧠🏆 Can you beat me?`;
     try {
@@ -298,13 +260,16 @@ export function ResultPage() {
     }
   };
 
-  const scrollToLeaderboard = () => {
-    leaderboardRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const currentRank =
-    leaderboard.find((e) => e.score === score)?.rank ?? leaderboard.length + 1;
-  const top5 = leaderboard.slice(0, 5);
+  const displayName = playerProfile
+    ? `${playerProfile.firstName} ${playerProfile.lastName}`.trim()
+    : "Player";
+  const currentEntry = leaderboard.find(
+    (e) =>
+      e.playerName === displayName &&
+      Boolean(e.disqualified) === disqualified &&
+      (disqualified ? e.displayScore === score : e.score === score)
+  );
+  const currentRank = currentEntry?.rank ?? leaderboard.length + 1;
 
   return (
     <>
@@ -343,7 +308,7 @@ export function ResultPage() {
           width={confettiSize.width}
           height={confettiSize.height}
           recycle={false}
-          numberOfPieces={520}
+          numberOfPieces={280}
           gravity={0.28}
           wind={0.012}
           initialVelocityX={13}
@@ -389,7 +354,7 @@ export function ResultPage() {
               filter: "drop-shadow(0 0 22px rgba(255,189,89,0.55))",
             }}
           >
-            Round Conquered!
+            Challenge Conquered!
           </motion.h1>
 
           <motion.p
@@ -418,6 +383,22 @@ export function ResultPage() {
             </span>
           </motion.div>
         </motion.div>
+
+        {disqualified && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl p-4 mb-5 text-center"
+            style={{
+              background: "rgba(180, 50, 50, 0.15)",
+              border: "1px solid rgba(248, 113, 113, 0.45)",
+            }}
+          >
+            <p className="text-red-200 font-bold text-sm">
+              Disqualified — too many tab switches. Your leaderboard entry reflects a forfeited score.
+            </p>
+          </motion.div>
+        )}
 
         {/* ── Score dashboard ────────────────────────────────────────────────── */}
         <motion.div
@@ -460,8 +441,12 @@ export function ResultPage() {
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "Rank", value: `#${currentRank}`, gold: true },
-                  { label: "Quarter", value: `Q${currentQuarter}`, gold: false },
-                  { label: "Year", value: String(getCurrentYear()), gold: false },
+                  {
+                    label: "Season",
+                    value: quarterLabel ?? `—`,
+                    gold: false,
+                  },
+                  { label: "Year", value: String(CHALLENGE_YEAR), gold: false },
                 ].map(({ label, value, gold }) => (
                   <div
                     key={label}
@@ -480,87 +465,7 @@ export function ResultPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Horizontal score bar */}
-              <div>
-                <div className="flex justify-between text-xs text-icai-light-blue/45 mb-1.5">
-                  <span>Overall Progress</span>
-                  <span>
-                    {score} / {TOTAL_MAX}
-                  </span>
-                </div>
-                <div
-                  className="h-3 rounded-full overflow-hidden"
-                  style={{ background: "rgba(20,88,134,0.2)" }}
-                >
-                  <motion.div
-                    className="h-full rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(score / TOTAL_MAX) * 100}%` }}
-                    transition={{ duration: 2, ease: "easeOut", delay: 0.55 }}
-                    style={{
-                      background: "linear-gradient(90deg, #FFBD59, #FF6B35)",
-                      boxShadow: "0 0 12px rgba(255,189,89,0.5)",
-                    }}
-                  />
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* Coin reward */}
-          <AnimatePresence>
-            {showReward && <CoinReward score={score} />}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* ── Performance insights ───────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.65, duration: 0.6, ease: EASE }}
-          className="rounded-2xl p-6 mb-5"
-          style={{
-            background:
-              "linear-gradient(160deg, rgba(10,1,71,0.88) 0%, rgba(20,88,134,0.3) 100%)",
-            border: "1px solid rgba(20,88,134,0.4)",
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          <h3 className="text-icai-yellow font-bold text-xs tracking-widest uppercase mb-5">
-            ⚡ Performance Insights
-          </h3>
-          <div className="space-y-4">
-            <InsightBar
-              label="Accuracy"
-              value={`${accuracy}%`}
-              pct={accuracy}
-              color="#FFBD59"
-              icon="🎯"
-              delay={0.85}
-            />
-            <InsightBar
-              label="Speed Tier"
-              value={
-                accuracy >= 80 ? "Lightning Fast" : accuracy >= 50 ? "Steady Pace" : "Careful & Thoughtful"
-              }
-              pct={accuracy}
-              color="#B1C9EB"
-              icon="⚡"
-              delay={1.0}
-            />
-            <InsightBar
-              label="Best Round"
-              value={ROUND_LABELS[bestRoundIdx]?.name ?? "—"}
-              pct={
-                MAX_ROUND_SCORES[bestRoundIdx] > 0
-                  ? (effectiveRoundScores[bestRoundIdx] / MAX_ROUND_SCORES[bestRoundIdx]) * 100
-                  : 0
-              }
-              color="#FF9F43"
-              icon="🏅"
-              delay={1.15}
-            />
           </div>
         </motion.div>
 
@@ -580,16 +485,36 @@ export function ResultPage() {
           <h3 className="text-icai-yellow font-bold text-xs tracking-widest uppercase mb-5">
             📊 Round Breakdown
           </h3>
+          <div
+            className="mb-5 px-4 py-3 rounded-xl font-bold text-sm"
+            style={{
+              background: "rgba(255,189,89,0.1)",
+              border: "1px solid rgba(255,189,89,0.35)",
+              color: "#FFBD59",
+            }}
+          >
+            Best round:{" "}
+            <span className="text-icai-light-grey">{bestRoundLabel}</span>
+            <span className="text-icai-light-blue/60 font-medium text-xs ml-2">
+              ({maxRoundScore} pts)
+            </span>
+          </div>
           <div className="space-y-5">
             {ROUND_LABELS.map(({ name, icon, color }, idx) => {
               const roundScore = effectiveRoundScores[idx] ?? 0;
               const maxScore = MAX_ROUND_SCORES[idx] ?? 1;
               const pct = (roundScore / maxScore) * 100;
+              const isBest = effectiveRoundScores[idx] === maxRoundScore && maxRoundScore > 0;
               return (
                 <div key={name}>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-icai-light-blue/85 text-sm font-semibold">
                       {icon} {name}
+                      {isBest && (
+                        <span className="ml-2 text-[10px] uppercase tracking-wider text-icai-yellow/90">
+                          Best
+                        </span>
+                      )}
                     </span>
                     <span className="font-black text-sm tabular-nums" style={{ color }}>
                       {roundScore}
@@ -667,111 +592,34 @@ export function ResultPage() {
           </p>
         </motion.div>
 
-        {/* ── Leaderboard ────────────────────────────────────────────────────── */}
+        {/* ── Leaderboard titles — podium layout ─────────────────────────────── */}
         <motion.div
-          ref={leaderboardRef}
-          initial={{ opacity: 0, y: 28 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05, duration: 0.65, ease: EASE }}
-          className="rounded-2xl p-6 mb-6"
+          transition={{ delay: 1.05, duration: 0.45, ease: EASE }}
+          className="rounded-2xl p-6 mb-6 relative"
           style={{
             background:
               "linear-gradient(160deg, rgba(10,1,71,0.88) 0%, rgba(20,88,134,0.3) 100%)",
             border: "1px solid rgba(20,88,134,0.4)",
             backdropFilter: "blur(12px)",
+            transform: "translateZ(0)",
           }}
         >
-          {/* Top shimmer line */}
           <div
-            className="absolute left-0 right-0 h-px"
+            className="absolute top-0 left-0 right-0 h-px"
             style={{
               background:
                 "linear-gradient(90deg, transparent, rgba(177,201,235,0.3), transparent)",
             }}
           />
-          <h3 className="text-icai-yellow font-bold text-xs tracking-widest uppercase mb-5">
-            🏆 Top Challengers
+          <h3 className="text-icai-yellow font-bold text-xs tracking-widest uppercase mb-2 text-center">
+            🏆 Leaderboard titles
           </h3>
-
-          {top5.length === 0 ? (
-            <p className="text-icai-light-blue/50 text-center py-5 text-sm">
-              No scores yet — you&apos;re the first!
-            </p>
-          ) : (
-            <div className="space-y-2.5">
-              {top5.map((entry, i) => {
-                const isCurrentPlayer = entry.score === score;
-                return (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, x: -18 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.15 + i * 0.08, duration: 0.5, ease: EASE }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl relative overflow-hidden"
-                    style={{
-                      background: isCurrentPlayer
-                        ? "rgba(255,189,89,0.11)"
-                        : entry.rank === 1
-                        ? "rgba(255,189,89,0.06)"
-                        : "rgba(20,88,134,0.1)",
-                      border: isCurrentPlayer
-                        ? "1px solid rgba(255,189,89,0.5)"
-                        : entry.rank === 1
-                        ? "1px solid rgba(255,189,89,0.3)"
-                        : "1px solid rgba(20,88,134,0.22)",
-                      boxShadow: isCurrentPlayer
-                        ? "0 0 18px rgba(255,189,89,0.12)"
-                        : undefined,
-                    }}
-                  >
-                    {isCurrentPlayer && (
-                      <motion.div
-                        className="absolute inset-0 pointer-events-none"
-                        animate={{
-                          background: [
-                            "linear-gradient(90deg, transparent, rgba(255,189,89,0.05), transparent)",
-                            "linear-gradient(90deg, transparent, rgba(255,189,89,0.12), transparent)",
-                            "linear-gradient(90deg, transparent, rgba(255,189,89,0.05), transparent)",
-                          ],
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                    )}
-                    {/* First-place Lottie crown animation */}
-                    {entry.rank === 1 ? (
-                      <div className="w-10 h-10 flex-shrink-0">
-                        <DotLottieReact
-                          src={FIRST_PLACE_LOTTIE_SRC}
-                          autoplay
-                          loop={false}
-                          style={{ width: "100%", height: "100%" }}
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-lg w-8 text-center flex-shrink-0">
-                        {getRankDisplay(entry.rank)}
-                      </span>
-                    )}
-                    <span
-                      className="flex-1 text-sm font-medium truncate"
-                      style={{ color: isCurrentPlayer ? "#FFBD59" : entry.rank === 1 ? "#FFBD59" : "#B1C9EB" }}
-                    >
-                      {entry.playerName}
-                      {isCurrentPlayer && (
-                        <span className="ml-2 text-[10px] opacity-55 font-normal">(you)</span>
-                      )}
-                    </span>
-                    <span
-                      className="font-black text-lg tabular-nums flex-shrink-0"
-                      style={{ color: isCurrentPlayer ? "#FFBD59" : entry.rank === 1 ? "#FFBD59" : "rgba(177,201,235,0.8)" }}
-                    >
-                      {entry.score}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+          <p className="text-icai-light-blue/55 text-center text-xs mb-6">
+            Where your score places you this season
+          </p>
+          <TitlesPodium />
         </motion.div>
 
         {/* ── Action buttons ─────────────────────────────────────────────────── */}
@@ -781,27 +629,6 @@ export function ResultPage() {
           transition={{ delay: 1.2, type: "spring", stiffness: 150, damping: 18 }}
           className="flex flex-col sm:flex-row gap-3 justify-center items-center"
         >
-          <AnimatedButton onClick={handlePlayAgain} disabled={!canPlay}>
-            {canPlay
-              ? "🎮 Play Again"
-              : `Next: Q${currentQuarter} ${currentYear + 1}`}
-          </AnimatedButton>
-
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={scrollToLeaderboard}
-            className="px-7 py-4 rounded-xl font-bold text-sm tracking-wide"
-            style={{
-              background: "rgba(177,201,235,0.08)",
-              border: "1px solid rgba(177,201,235,0.32)",
-              color: "#B1C9EB",
-              cursor: "pointer",
-            }}
-          >
-            🏆 View Leaderboard
-          </motion.button>
-
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}

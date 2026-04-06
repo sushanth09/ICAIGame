@@ -9,8 +9,6 @@ interface ProgressBarProps {
 }
 
 export function ProgressBar({ current, total, label = "Progress" }: ProgressBarProps) {
-  const percentage = total > 0 ? Math.min(100, ((current - 1) / total) * 100) : 0;
-
   const getDotColor = (index: number): string => {
     if (index < current - 1) return "#22C55E";       // completed → green
     if (index === current - 1) return "#FFBD59";     // current → gold
@@ -71,51 +69,13 @@ export function ProgressBar({ current, total, label = "Progress" }: ProgressBarP
                 background: getDotColor(i),
                 boxShadow: getDotGlow(i),
                 zIndex: 1,
-                transition: "background 0.4s ease, box-shadow 0.4s ease",
+                transform:
+                  i === current - 1 ? "translateZ(0) scale(1.12)" : "translateZ(0) scale(1)",
+                transition: "background 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease",
               }}
-              animate={
-                i === current - 1
-                  ? { scale: [1, 1.3, 1], opacity: [1, 0.85, 1] }
-                  : { scale: 1, opacity: 1 }
-              }
-              transition={
-                i === current - 1
-                  ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
-                  : { duration: 0.3 }
-              }
             />
           </motion.div>
         ))}
-      </div>
-
-      {/* Thin progress bar track below dots */}
-      <div
-        className="mt-3 h-1 rounded-full overflow-hidden"
-        style={{
-          background: "rgba(15,14,12,0.65)",
-          border: "1px solid rgba(20,88,134,0.2)",
-        }}
-      >
-        <motion.div
-          className="h-full rounded-full relative overflow-hidden"
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          style={{
-            background: "linear-gradient(90deg, #22C55E 0%, #FFBD59 100%)",
-            boxShadow: "0 0 6px rgba(255,189,89,0.35)",
-          }}
-        >
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)",
-            }}
-            animate={{ x: ["-100%", "200%"] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
-          />
-        </motion.div>
       </div>
     </div>
   );

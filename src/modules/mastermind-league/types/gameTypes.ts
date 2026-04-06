@@ -64,6 +64,14 @@ export interface GameState {
   gameStarted: boolean;
   gameCompleted: boolean;
   phase: GamePhase;
+  disqualified?: boolean;
+}
+
+export interface PlayerProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  chapter: string | null;
 }
 
 export interface LeaderboardEntry {
@@ -72,4 +80,9 @@ export interface LeaderboardEntry {
   score: number;
   rank: number;
   date: string;
+  /** Shown on podium when present */
+  chapter?: string;
+  /** Sorting score may be 0 when disqualified; optional display value */
+  displayScore?: number;
+  disqualified?: boolean;
 }

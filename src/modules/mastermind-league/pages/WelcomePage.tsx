@@ -245,7 +245,7 @@ export function WelcomePage({ onContinue }: WelcomePageProps) {
               style={{ background: C.gold }}
             />
             <span style={{ ...PP, color: C.gold, fontSize: "0.68rem", letterSpacing: "0.18em", fontWeight: 600 }}>
-              ICAI ATLANTA CHAPTER · FIRST EDITION
+              ICAI ATLANTA CHAPTER · FIRST Challenge
             </span>
           </div>
 

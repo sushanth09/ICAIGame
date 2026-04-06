@@ -1,7 +1,7 @@
 // ICAI Atlanta Mastermind League - Zustand Game Store
 
 import { create } from "zustand";
-import type { GamePhase } from "../types/gameTypes";
+import type { GamePhase, PlayerProfile } from "../types/gameTypes";
 
 interface GameStore {
   score: number;
@@ -12,6 +12,8 @@ interface GameStore {
   gameStarted: boolean;
   gameCompleted: boolean;
   phase: GamePhase;
+  playerProfile: PlayerProfile | null;
+  disqualified: boolean;
 
   setPhase: (phase: GamePhase) => void;
   setScore: (score: number) => void;
@@ -21,6 +23,8 @@ interface GameStore {
   setTimeRemaining: (time: number) => void;
   setGameStarted: (started: boolean) => void;
   setGameCompleted: (completed: boolean) => void;
+  setPlayerProfile: (profile: PlayerProfile | null) => void;
+  setDisqualified: (v: boolean) => void;
 
   nextQuestion: () => void;
   addScore: (points: number) => void;
@@ -36,6 +40,8 @@ const initialState = {
   gameStarted: false,
   gameCompleted: false,
   phase: "landing" as GamePhase,
+  playerProfile: null as PlayerProfile | null,
+  disqualified: false,
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -54,6 +60,8 @@ export const useGameStore = create<GameStore>((set) => ({
   setTimeRemaining: (timeRemaining) => set({ timeRemaining }),
   setGameStarted: (gameStarted) => set({ gameStarted }),
   setGameCompleted: (gameCompleted) => set({ gameCompleted }),
+  setPlayerProfile: (playerProfile) => set({ playerProfile }),
+  setDisqualified: (disqualified) => set({ disqualified }),
 
   nextQuestion: () =>
     set((state) => ({

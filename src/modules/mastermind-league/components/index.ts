@@ -18,5 +18,8 @@ export {
 } from "./QuestionCard";
 export type { AnswerFeedback } from "./QuestionCard";
 export { TabBlockerOverlay } from "./TabBlockerOverlay";
+export { TitlesPodium } from "./TitlesPodium";
+export { WinnersPodium } from "./WinnersPodium";
+export { ChallengeRegistrationModal } from "./ChallengeRegistrationModal";
 export { SoundToggle } from "./SoundToggle";
 export { GlobalSoundToggle } from "./GlobalSoundToggle";

@@ -5,6 +5,12 @@ import { motion } from "framer-motion";
 import type { DotLottie } from "@lottiefiles/dotlottie-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { AnimatedButton } from "../components/AnimatedButton";
+import { ChallengeRegistrationModal } from "../components/ChallengeRegistrationModal";
+import type { PlayerProfile } from "../types/gameTypes";
+
+/** DotLottie file URL (from embed: lottie.host/embed/.../I4bF7I9cDV.lottie) */
+const RULES_HERO_LOTTIE_SRC =
+  "https://lottie.host/69281a4b-07e3-4204-8925-b33a8e483b9d/I4bF7I9cDV.lottie";
 
 const EASE = [0.33, 1, 0.68, 1] as const;
 
@@ -15,9 +21,8 @@ const ROUNDS = [
     title: "The Analyst Arena",
     lottieUrl:
       "https://lottie.host/808ea013-e2db-43c6-bc53-0673fb8af710/l6rmMtFfrx.lottie",
-    bullets: ["Ind AS", "Accounting principles", "Financial analysis"],
     questions: 5,
-    points: "10 pts each",
+    points: "5 pts each",
     time: "30s / Q",
     accentColor: "rgba(74,158,204,0.8)",
     borderColor: "rgba(255,189,89,0.35)",
@@ -33,9 +38,8 @@ const ROUNDS = [
     title: "Myth or Fact",
     lottieUrl:
       "https://lottie.host/f2404a81-8441-44bd-b8de-e2957cf7009e/cm2IHgqlGz.lottie",
-    bullets: ["Accounting statements", "True or false format", "Test your clarity"],
     questions: 5,
-    points: "10 pts each",
+    points: "5 pts each",
     time: "30s / Q",
     accentColor: "rgba(255,189,89,0.8)",
     borderColor: "rgba(255,189,89,0.45)",
@@ -47,14 +51,13 @@ const ROUNDS = [
   },
   {
     number: 3,
-    tag: "TYPE-IN",
+    tag: "MCQ",
     title: "Lightning Round",
     lottieUrl:
       "https://lottie.host/0fb673c5-6b2a-4cdb-984a-8269f2238c2f/ySHbHNZHti.lottie",
-    bullets: ["Type finance terms fast", "Speed + accuracy matter", "10 terms total"],
-    questions: 10,
-    points: "5 pts each",
-    time: "60s / Q",
+    questions: "Max 25",
+    points: "2 pts each",
+    time: "30s / Q",
     accentColor: "rgba(177,201,235,0.8)",
     borderColor: "rgba(177,201,235,0.4)",
     glowColor: "rgba(177,201,235,0.3)",
@@ -62,33 +65,6 @@ const ROUNDS = [
     cardBg: "linear-gradient(155deg, rgba(177,201,235,0.16) 0%, rgba(15,14,12,0.92) 100%)",
     spotlightBg: "linear-gradient(155deg, rgba(177,201,235,0.3) 0%, rgba(15,14,12,0.96) 100%)",
     spotlightGlow: "0 0 60px rgba(177,201,235,0.4), 0 0 24px rgba(177,201,235,0.25)",
-  },
-] as const;
-
-const TIERS = [
-  {
-    name: "Rising Star",
-    range: "0–50 pts",
-    color: "#B1C9EB",
-    lottieUrl:
-      "https://lottie.host/2caffa3e-b0d0-4e80-b18f-d36897562f8c/9FEOZWHyWv.lottie",
-    glowColor: "rgba(177,201,235,0.35)",
-  },
-  {
-    name: "Scholar",
-    range: "51–80 pts",
-    color: "#FFBD59",
-    lottieUrl:
-      "https://lottie.host/e94a3c8c-0e4d-4f0b-95d1-78dff7f7a4b8/mxmsdMYWLA.lottie",
-    glowColor: "rgba(255,189,89,0.35)",
-  },
-  {
-    name: "Mastermind",
-    range: "81+ pts",
-    color: "#E8E9E4",
-    lottieUrl:
-      "https://lottie.host/8c60527d-7e53-4fea-9c73-c5a15b17431c/Bgf2QoyrFp.lottie",
-    glowColor: "rgba(232,233,228,0.3)",
   },
 ] as const;
 
@@ -262,18 +238,6 @@ function RoundCard({
                 >
                   {round.title}
                 </h3>
-                <ul className="space-y-1">
-                  {round.bullets.map((bullet) => (
-                    <li
-                      key={bullet}
-                      className="flex items-center gap-1.5 leading-snug"
-                      style={{ color: "#B1C9EB", fontSize: "14px" }}
-                    >
-                      <span className="flex-shrink-0" style={{ color: round.accentColor, fontSize: "10px" }}>◆</span>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
 
@@ -356,25 +320,6 @@ function RoundCard({
               {round.title}
             </h3>
 
-            {/* Bullets — flex-1 so all cards distribute space equally */}
-            <div className="flex-1 mb-4">
-              <ul className="space-y-2">
-                {round.bullets.map((bullet, i) => (
-                  <motion.li
-                    key={bullet}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: bulletVisible ? 1 : 0, x: bulletVisible ? 0 : -10 }}
-                    transition={{ delay: i * 0.1, duration: 0.4, ease: EASE }}
-                    className="flex items-center gap-2 leading-snug"
-                    style={{ color: "#B1C9EB", fontSize: "15px" }}
-                  >
-                    <span className="flex-shrink-0" style={{ color: round.accentColor, fontSize: "11px" }}>◆</span>
-                    {bullet}
-                  </motion.li>
-                ))}
-              </ul>
-            </div>
-
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 flex-shrink-0">
               {[
@@ -403,65 +348,17 @@ function RoundCard({
   );
 }
 
-// ─── Tier Card ────────────────────────────────────────────────────────────────
-
-function TierCard({
-  tier,
-  delay,
-  compact = false,
-}: {
-  tier: (typeof TIERS)[number];
-  delay: number;
-  compact?: boolean;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.45, ease: EASE }}
-      className="flex flex-col items-center gap-1.5 rounded-2xl"
-      style={{
-        background: "rgba(20,88,134,0.2)",
-        border: "1px solid rgba(255,189,89,0.18)",
-        boxShadow: `0 0 20px ${tier.glowColor}`,
-        padding: compact ? "10px 12px" : "16px 20px",
-        minWidth: compact ? 88 : 120,
-      }}
-    >
-      <div style={{ width: compact ? 56 : 72, height: compact ? 56 : 72 }}>
-        <DotLottieReact
-          src={tier.lottieUrl}
-          loop
-          autoplay
-          style={{ width: "100%", height: "100%" }}
-        />
-      </div>
-      <p
-        className="font-bold leading-tight text-center"
-        style={{ color: tier.color, fontSize: compact ? "12px" : "14px" }}
-      >
-        {tier.name}
-      </p>
-      <p
-        className="leading-tight text-center"
-        style={{ color: "rgba(177,201,235,0.6)", fontSize: "12px" }}
-      >
-        {tier.range}
-      </p>
-    </motion.div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 interface RulesPageProps {
-  onBegin: () => void;
+  onRegistered: (profile: PlayerProfile) => void;
 }
 
-export function RulesPage({ onBegin }: RulesPageProps) {
+export function RulesPage({ onRegistered }: RulesPageProps) {
   const [phase, setPhase] = useState(0);
   const [r3Flash, setR3Flash] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [regOpen, setRegOpen] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -476,14 +373,14 @@ export function RulesPage({ onBegin }: RulesPageProps) {
       return;
     }
     const timers = [
-      setTimeout(() => setPhase(1), 300),
-      setTimeout(() => setPhase(2), 1550),
+      setTimeout(() => setPhase(1), 200),
+      setTimeout(() => setPhase(2), 900),
       setTimeout(() => {
         setPhase(3);
         setR3Flash(true);
-        setTimeout(() => setR3Flash(false), 450);
-      }, 2800),
-      setTimeout(() => setPhase(4), 4050),
+        setTimeout(() => setR3Flash(false), 350);
+      }, 1600),
+      setTimeout(() => setPhase(4), 2300),
     ];
     return () => timers.forEach(clearTimeout);
   }, [isMobile]);
@@ -589,7 +486,7 @@ export function RulesPage({ onBegin }: RulesPageProps) {
             backgroundClip: "text",
           }}
         >
-          Finance Mastermind Challenge
+          Mastermind Challenge
         </h1>
 
         <p
@@ -657,6 +554,32 @@ export function RulesPage({ onBegin }: RulesPageProps) {
         </div>
       </motion.section>
 
+      {/* Tab-switch warning (Rules = page 2 in the flow) */}
+      <motion.section
+        className="relative z-10"
+        style={{ padding: isMobile ? "12px 16px 0" : "16px 24px 0" }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45, duration: 0.5 }}
+      >
+        <div
+          className="rounded-xl mx-auto text-center"
+          style={{
+            maxWidth: 640,
+            padding: isMobile ? "12px 14px" : "14px 20px",
+            background: "rgba(180, 50, 50, 0.12)",
+            border: "1px solid rgba(248, 113, 113, 0.35)",
+          }}
+        >
+          <p
+            className="font-semibold leading-snug"
+            style={{ color: "#FCA5A5", fontSize: isMobile ? "12px" : "13px" }}
+          >
+            Do not switch tabs during the challenge. Doing so may lead to disqualification.
+          </p>
+        </div>
+      </motion.section>
+
       {/* ════════════════════════════════════════════════════════════════════
           SECTION 3 — ROUND CARDS
           overflow:visible so the spotlight scale-up is never clipped.
@@ -694,56 +617,45 @@ export function RulesPage({ onBegin }: RulesPageProps) {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
-          SECTION 4 — LEADERBOARD
+          SECTION 4 — HERO ANIMATION (same for every player; no leaderboard)
       ════════════════════════════════════════════════════════════════════ */}
       <motion.section
         className="relative z-10"
-        style={{ padding: isMobile ? "32px 16px 0" : "48px 24px 0" }}
+        style={{ padding: isMobile ? "24px 16px 0" : "40px 24px 0" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: isMobile ? 0.5 : 2.0, duration: 0.7, ease: EASE }}
+        transition={{ delay: isMobile ? 0.45 : 1.2, duration: 0.55, ease: EASE }}
       >
         <div
-          className="rounded-2xl"
+          className="rounded-2xl mx-auto flex flex-col items-center"
           style={{
             background: "rgba(10,9,8,0.88)",
             border: "1px solid rgba(255,189,89,0.28)",
             backdropFilter: "blur(16px)",
             boxShadow: "0 0 40px rgba(255,189,89,0.07), inset 0 1px 0 rgba(255,189,89,0.06)",
-            padding: isMobile ? "20px 16px" : "28px 32px",
-            maxWidth: 900,
-            margin: "0 auto",
+            padding: isMobile ? "16px 12px" : "24px 20px",
+            maxWidth: 560,
           }}
         >
-          {/* Label row */}
-          <div className="text-center mb-5">
-            <p
-              className="font-black tracking-widest uppercase mb-1"
-              style={{ color: "#FFBD59", fontSize: "11px", letterSpacing: "0.14em" }}
-            >
-              Leaderboard Titles
-            </p>
-            <p style={{ color: "rgba(177,201,235,0.55)", fontSize: "13px" }}>
-              Earn a title based on your final score
-            </p>
-          </div>
-
-          {/* Tier cards */}
-          <div
-            style={
-              isMobile
-                ? { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }
-                : { display: "flex", justifyContent: "center", gap: 20, alignItems: "center" }
-            }
+          <h3
+            className="font-black tracking-widest uppercase mb-4 text-center"
+            style={{ color: "#FFBD59", letterSpacing: "0.14em", fontSize: isMobile ? "11px" : "12px" }}
           >
-            {TIERS.map((tier, i) => (
-              <TierCard
-                key={tier.name}
-                tier={tier}
-                delay={isMobile ? 0.6 + i * 0.1 : 2.2 + i * 0.12}
-                compact={isMobile}
-              />
-            ))}
+            Your path to the top
+          </h3>
+          <div
+            className="w-full flex justify-center"
+            style={{
+              minHeight: isMobile ? 200 : 280,
+              maxWidth: 480,
+            }}
+          >
+            <DotLottieReact
+              src={RULES_HERO_LOTTIE_SRC}
+              loop
+              autoplay
+              style={{ width: "100%", height: "min(42vw, 320px)", maxHeight: 360 }}
+            />
           </div>
         </div>
       </motion.section>
@@ -756,36 +668,38 @@ export function RulesPage({ onBegin }: RulesPageProps) {
         style={{ padding: isMobile ? "20px 16px 0" : "24px 24px 0" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: isMobile ? 0.7 : 2.45, duration: 0.65, ease: EASE }}
+        transition={{ delay: isMobile ? 0.55 : 1.65, duration: 0.5, ease: EASE }}
       >
         <div
-          className="flex items-center gap-4 rounded-2xl"
+          className="rounded-2xl"
           style={{
-            background: "linear-gradient(135deg, rgba(255,189,89,0.1) 0%, rgba(15,14,12,0.75) 100%)",
+            background: "linear-gradient(155deg, rgba(20,88,134,0.22) 0%, rgba(10,9,8,0.92) 100%)",
             border: "1px solid rgba(255,189,89,0.28)",
             backdropFilter: "blur(14px)",
-            padding: isMobile ? "16px" : "20px 28px",
+            padding: isMobile ? "18px 16px" : "24px 28px",
             maxWidth: 900,
             margin: "0 auto",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
           }}
         >
-          <span className="trophy-glow flex-shrink-0" style={{ fontSize: isMobile ? 28 : 36 }}>
-            🏆
-          </span>
-          <div>
-            <p
-              className="font-black leading-tight"
-              style={{ color: "#FFBD59", fontSize: isMobile ? "14px" : "16px" }}
-            >
-              Annual Mastermind Championship
-            </p>
-            <p
-              className="leading-relaxed mt-1"
-              style={{ color: "rgba(177,201,235,0.65)", fontSize: isMobile ? "12px" : "13px" }}
-            >
-              Top performers compete throughout the year · Champion crowned at year end
-            </p>
-          </div>
+          <p
+            className="font-black uppercase tracking-widest mb-4"
+            style={{ color: "#FFBD59", fontSize: "15px", letterSpacing: "0.2em" }}
+          >
+            How the season works
+          </p>
+          <ul className="space-y-2" style={{ color: "rgba(232,233,228,0.92)" }}>
+            <li className="leading-relaxed" style={{ fontSize: isMobile ? "14px" : "15px" }}>
+              <span className="font-bold text-[#FFBD59]">3 challenges in 2026. That’s it.</span>
+              {" "}We’ll see you next year 😌
+            </li>
+            <li className="leading-relaxed" style={{ fontSize: isMobile ? "14px" : "15px" }}>
+              Leaderboard updates every quarter, so yes, we are watching.{" "}
+            </li>
+            <li className="leading-relaxed text-[#B1C9EB]/85" style={{ fontSize: isMobile ? "13px" : "14px" }}>
+              Winners announced in the first newsletter of 2027 🏆”
+            </li>
+          </ul>
         </div>
       </motion.section>
 
@@ -797,12 +711,12 @@ export function RulesPage({ onBegin }: RulesPageProps) {
         style={{ padding: isMobile ? "28px 16px 48px" : "40px 24px 60px" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: isMobile ? 0.9 : 2.65, duration: 0.6, ease: EASE }}
+        transition={{ delay: isMobile ? 0.75 : 1.85, duration: 0.5, ease: EASE }}
       >
         {isMobile ? (
           /* Full-width tap target on mobile */
           <motion.button
-            onClick={onBegin}
+            onClick={() => setRegOpen(true)}
             className="w-full rounded-xl font-black tracking-wide relative overflow-hidden"
             style={{
               minHeight: 56,
@@ -826,9 +740,18 @@ export function RulesPage({ onBegin }: RulesPageProps) {
             <span className="relative z-10">Start the Challenge ⚡</span>
           </motion.button>
         ) : (
-          <AnimatedButton onClick={onBegin}>Start the Challenge ⚡</AnimatedButton>
+          <AnimatedButton onClick={() => setRegOpen(true)}>Start the Challenge ⚡</AnimatedButton>
         )}
       </motion.section>
+
+      <ChallengeRegistrationModal
+        open={regOpen}
+        onClose={() => setRegOpen(false)}
+        onSuccess={(profile) => {
+          setRegOpen(false);
+          onRegistered(profile);
+        }}
+      />
     </div>
   );
 }
