@@ -22,6 +22,12 @@ export const metadata: Metadata = {
     "A game-style knowledge competition for finance professionals. Play. Compete. Conquer.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

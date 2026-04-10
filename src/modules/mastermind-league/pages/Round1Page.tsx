@@ -288,7 +288,7 @@ export function Round1Page() {
         )}
       </AnimatePresence>
 
-      <div className="w-full max-w-3xl mx-auto px-4 py-5 pb-10 space-y-4 md:max-h-none">
+      <div className="w-full min-w-0 max-w-3xl mx-auto px-4 py-5 pb-10 space-y-4">
         {/* Round header banner */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}

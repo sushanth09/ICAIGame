@@ -11,50 +11,63 @@
   --icai-dark-grey: #0F0E0C;
 }
 
+/* Mobile-first: document scrolls; avoid height:100% on html (breaks iOS overflow) */
 html {
-  height: 100%;
+  min-height: 100%;
+  overflow-x: clip;
 }
 
 body {
   font-family: var(--font-poppins), 'Poppins', system-ui, sans-serif;
   background: linear-gradient(160deg, #0F0E0C 0%, #0A0147 40%, #145886 100%);
   min-height: 100%;
+  min-height: 100dvh;
   color: #E8E9E4;
+  overflow-x: clip;
 }
 
-/* Desktop: lock the viewport — no scroll, fixed vh */
+/* Desktop: lock the viewport — no document scroll */
 @media (min-width: 768px) {
   html,
   body {
     height: 100%;
+    max-height: 100%;
     overflow: hidden;
   }
 
   #__next,
   [data-nextjs-scroll-focus-boundary] {
     height: 100%;
+    max-height: 100%;
     overflow: hidden;
   }
 }
 
-/* Mobile: allow scrolling — overflow-hidden on html/body blocks
-   touch-based scrolling in ALL child elements on iOS Safari */
+/* Mobile: only body scrolls (avoids double-scroll / iOS stuck scroll) */
 @media (max-width: 767px) {
   html {
-    overflow-x: hidden;
-    overflow-y: auto;
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: clip;
+    overflow-y: visible;
   }
 
   body {
-    overflow-x: hidden;
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: clip;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
 
   #__next,
   [data-nextjs-scroll-focus-boundary] {
     height: auto;
-    min-height: 100%;
+    min-height: 100dvh;
+    max-width: 100%;
     overflow: visible;
   }
 }

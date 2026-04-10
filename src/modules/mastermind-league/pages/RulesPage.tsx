@@ -398,13 +398,8 @@ export function RulesPage({ onRegistered }: RulesPageProps) {
      * Sections stack vertically; the page can scroll if viewport is short.
      */
     <div
-      className="relative w-full h-full"
-      style={{
-        background: "#0F0E0C",
-        overflowX: "hidden",
-        overflowY: "auto",
-        zIndex: 20,
-      }}
+      className="relative z-20 w-full min-w-0 max-w-full overflow-x-hidden md:h-full md:overflow-y-auto"
+      style={{ background: "#0F0E0C" }}
     >
       {/* ── Keyframes ────────────────────────────────────────────────────────── */}
       <style>{`

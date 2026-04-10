@@ -322,7 +322,7 @@ export function ResultPage() {
         />
       )}
 
-      <div className="w-full h-full overflow-y-auto">
+      <div className="w-full min-w-0 max-w-full pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-10">
         {/* ── Header ────────────────────────────────────────────────────────── */}
         <motion.div

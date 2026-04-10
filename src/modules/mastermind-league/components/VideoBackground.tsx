@@ -266,7 +266,7 @@ export function VideoBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
+    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }} aria-hidden>
 
       {/* ── Layer 1: actual video ──────────────────────────────────── */}
       <video

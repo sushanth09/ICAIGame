@@ -72,7 +72,7 @@ export function LandingPage({
   // SSR skeleton — matches the mounted layout exactly
   if (!mounted) {
     return (
-      <div className="w-full min-h-full md:h-full flex flex-col items-center justify-center text-center px-6 py-16 md:py-0">
+      <div className="w-full min-w-0 max-w-full min-h-[100dvh] md:min-h-0 md:h-full flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 md:py-0">
         <p style={{ ...PP, color: "#E5E7EB", fontSize: "1rem", letterSpacing: "0.15em", fontWeight: 500 }}>
           ICAI ATLANTA CHAPTER
         </p>
@@ -123,7 +123,7 @@ export function LandingPage({
 
       {/* Hero — fills the available height, centered */}
       <div
-        className="w-full min-h-full md:h-full flex flex-col items-center justify-center text-center px-6 gap-5 md:gap-6 py-16 md:py-0 overflow-y-auto md:overflow-hidden"
+        className="w-full min-w-0 max-w-full min-h-[100dvh] md:min-h-0 md:h-full flex flex-col items-center justify-center text-center px-4 sm:px-6 gap-5 md:gap-6 py-16 md:py-0 md:overflow-hidden"
         style={{ position: "relative", zIndex: 1 }}
       >
         {/* 1. ICAI Atlanta Chapter Presents — cinematic zoom */}

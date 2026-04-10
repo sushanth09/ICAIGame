@@ -11,8 +11,9 @@ const OPTIONS: ISourceOptions = {
   fpsLimit: 60,
   interactivity: {
     events: {
-      onHover: { enable: true, mode: "grab" },
-      onClick: { enable: true, mode: "repulse" },
+      /* Disabled — canvas must not steal touch/scroll on mobile */
+      onHover: { enable: false, mode: "grab" },
+      onClick: { enable: false, mode: "repulse" },
     },
     modes: {
       grab: {
@@ -58,10 +59,10 @@ export function ParticleBackground() {
     }).then(() => setInit(true));
   }, []);
 
-  if (!init) return <div className="fixed inset-0 -z-10" />;
+  if (!init) return <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden />;
 
   return (
-    <div className="fixed inset-0 -z-10">
+    <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden>
       <Particles id="mastermind-particles" options={OPTIONS} className="w-full h-full" />
     </div>
   );
