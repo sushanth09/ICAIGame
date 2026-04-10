@@ -9,7 +9,7 @@ const SLOTS = [
   {
     place: 2 as const,
     title: "Scholar",
-    range: "51–80 pts",
+    range: "33–65 pts",
     icon: "📚",
     accent: "#FFBD59",
     cardH: "min(34vw, 140px)",
@@ -19,7 +19,7 @@ const SLOTS = [
   {
     place: 1 as const,
     title: "Mastermind",
-    range: "81+ pts",
+    range: "66+ pts",
     icon: "🧠",
     accent: "#FFBD59",
     cardH: "min(42vw, 188px)",
@@ -29,7 +29,7 @@ const SLOTS = [
   {
     place: 3 as const,
     title: "Rising Star",
-    range: "0–50 pts",
+    range: "0–32 pts",
     icon: "⭐",
     accent: "#B1C9EB",
     cardH: "min(30vw, 120px)",

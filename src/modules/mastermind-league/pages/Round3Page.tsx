@@ -13,13 +13,14 @@ import type { AnswerFeedback } from "../components";
 import { round3Questions } from "../data/questions";
 import { useGameStore } from "../store/gameStore";
 import { validateRound3Answer, createAnswer } from "../engine/gameEngine";
+import { getPointsForRound, ROUND3_MAX_QUESTIONS } from "../utils/scoring";
+import { ROUND3_TOTAL_SECONDS } from "../constants/gameTiming";
 import { saveGameState } from "../services/gameService";
 import { useGameTimer } from "../hooks/useGameTimer";
 import { useTabSwitchDetection } from "../hooks/useTabSwitchDetection";
 import { useSoundEffects } from "../hooks/useSoundSystem";
 
-const TOTAL_TIME = 60;
-const POINTS_PER_CORRECT = 5;
+const TOTAL_TIME = ROUND3_TOTAL_SECONDS;
 const FEEDBACK_DURATION_MS = 1000;
 
 const EASE = [0.33, 1, 0.68, 1] as const;
@@ -71,13 +72,16 @@ export function Round3Page() {
 
   const timeRemaining = useGameStore((s) => s.timeRemaining);
   const score = useGameStore((s) => s.score);
-  const roundScores = useGameStore((s) => s.roundScores);
   const { setTimeRemaining } = useGameStore();
   const { playCorrect, playWrong } = useSoundEffects();
 
-  const rawQuestion = round3Questions[currentQuestionIndex];
-  const totalQuestions = round3Questions.length;
-  const isLastQuestion = currentQuestionIndex >= totalQuestions - 1;
+  const r3PlayCount = Math.min(ROUND3_MAX_QUESTIONS, round3Questions.length);
+  const rawQuestion =
+    currentQuestionIndex < r3PlayCount
+      ? round3Questions[currentQuestionIndex]
+      : undefined;
+  const totalQuestions = r3PlayCount;
+  const isLastQuestion = currentQuestionIndex >= r3PlayCount - 1;
   const timeExpired = timeRemaining <= 0;
   const isCritical = timeRemaining <= 5 && timeRemaining > 0;
 
@@ -100,13 +104,21 @@ export function Round3Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useGameTimer(!timeExpired, finishGame);
+  useEffect(() => {
+    if (r3PlayCount <= 0) finishGame();
+  }, [r3PlayCount, finishGame]);
+
+  useEffect(() => {
+    if (r3PlayCount > 0 && currentQuestionIndex >= r3PlayCount) finishGame();
+  }, [currentQuestionIndex, r3PlayCount, finishGame]);
+
+  useGameTimer(!timeExpired && !answered, finishGame);
 
   const handleAnswer = (answer: string) => {
     if (answered || timeExpired || !question) return;
     setAnswered(true);
     const correct = validateRound3Answer(question, answer);
-    const points = correct ? POINTS_PER_CORRECT : 0;
+    const points = correct ? getPointsForRound(3) : 0;
     addScore(points);
     setFeedback({ correct, points });
     createAnswer(question.id, answer, correct, 3);
@@ -152,8 +164,7 @@ export function Round3Page() {
         )}
       </AnimatePresence>
 
-      <div className="w-full h-full overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 py-5 space-y-3">
+      <div className="w-full max-w-3xl mx-auto px-4 py-5 pb-10 space-y-3">
           <motion.div
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -172,7 +183,9 @@ export function Round3Page() {
                 Round 3 of 3 · Final Round
               </p>
               <h2 className="text-lg font-black text-icai-light-grey">⚡ Lightning Round</h2>
-              <p className="text-icai-light-blue/45 text-[10px] mt-1">60 seconds for the full round</p>
+              <p className="text-icai-light-blue/45 text-[10px] mt-1">
+                {TOTAL_TIME} seconds for the full round
+              </p>
             </div>
             <div className="flex items-center gap-6">
               <Timer
@@ -209,7 +222,6 @@ export function Round3Page() {
               />
             </motion.div>
           </AnimatePresence>
-        </div>
       </div>
     </>
   );

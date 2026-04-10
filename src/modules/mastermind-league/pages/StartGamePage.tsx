@@ -115,12 +115,12 @@ function TimerIcon() {
 }
 
 // ── Animated Points / Leaderboard Icon (Score) ──────────────────────────────
-function PointsIcon() {
+function PointsIcon({ targetScore }: { targetScore: number }) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     let frame: number;
     let start: number | null = null;
-    const target = 100;
+    const target = targetScore;
     const duration = 1400;
     const tick = (ts: number) => {
       if (!start) start = ts;
@@ -130,7 +130,7 @@ function PointsIcon() {
     };
     const t = setTimeout(() => { frame = requestAnimationFrame(tick); }, 1000);
     return () => { clearTimeout(t); cancelAnimationFrame(frame); };
-  }, []);
+  }, [targetScore]);
 
   const rows = [
     { w: 28, gold: true },
@@ -188,11 +188,33 @@ function PointsIcon() {
   );
 }
 
-// ── Stat card data ────────────────────────────────────────────────────────────
-const STAT_ITEMS = [
-  { Icon: ChartIcon,  label: "3 Rounds",    sub: "of escalating intensity" },
-  { Icon: TimerIcon,  label: "6 Minutes",   sub: "of total play time"      },
-  { Icon: PointsIcon, label: "100 Points",  sub: "maximum score possible"  },
+// ── Stat card data (aligned with live question set + timers) ────────────────
+type StatItem =
+  | { kind: "chart"; Icon: typeof ChartIcon; label: string; sub: string }
+  | { kind: "timer"; Icon: typeof TimerIcon; label: string; sub: string }
+  | {
+      kind: "points";
+      Icon: typeof PointsIcon;
+      label: string;
+      sub: string;
+      targetScore: number;
+    };
+
+const PRE_GAME_STAT_ITEMS: StatItem[] = [
+  { kind: "chart", Icon: ChartIcon, label: "3 Rounds", sub: "of escalating intensity" },
+  {
+    kind: "timer",
+    Icon: TimerIcon,
+    label: "11 Minutes",
+    sub: "typical time to complete the full challenge",
+  },
+  {
+    kind: "points",
+    Icon: PointsIcon,
+    label: "100 Points",
+    sub: "maximum score possible",
+    targetScore: 100,
+  },
 ];
 
 // ── Floating finance symbols ──────────────────────────────────────────────────
@@ -323,6 +345,7 @@ function GameBackground() {
 export function StartGamePage({ onBegin }: StartGamePageProps) {
   const [showLottie, setShowLottie] = useState(false);
   const calledRef = useRef(false);
+  const statItems = PRE_GAME_STAT_ITEMS;
 
   useEffect(() => {
     calledRef.current = false;
@@ -344,7 +367,7 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
   // Safety fallback: proceed after 4 s even if onComplete never fires
   useEffect(() => {
     if (!showLottie) return;
-    const t = setTimeout(triggerBegin, 4000);
+    const t = setTimeout(triggerBegin, 2500);
     return () => clearTimeout(t);
   }, [showLottie, triggerBegin]);
 
@@ -415,7 +438,7 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
 
         {/* ── Stat cards ── */}
         <div className="relative z-10 flex flex-col sm:flex-row gap-4 mb-10">
-          {STAT_ITEMS.map((stat, i) => (
+          {statItems.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 28 }}
@@ -436,7 +459,11 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
               }}
             >
               <div className="mb-1">
-                <stat.Icon />
+                {stat.kind === "points" ? (
+                  <PointsIcon targetScore={stat.targetScore} />
+                ) : (
+                  <stat.Icon />
+                )}
               </div>
               <span className="text-icai-yellow font-bold text-sm mt-0.5">{stat.label}</span>
               <span className="text-icai-light-blue/70 text-xs mt-0.5">{stat.sub}</span>
@@ -468,15 +495,17 @@ export function StartGamePage({ onBegin }: StartGamePageProps) {
           <LightningSparks />
 
           <motion.button
+            type="button"
             onClick={handleLaunch}
             whileHover={{ scale: 1.07 }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.22 }}
-            className="relative z-10 px-12 md:px-16 py-5 rounded-2xl text-lg md:text-2xl font-black tracking-wide overflow-hidden"
+            className="relative z-10 touch-manipulation px-7 py-3 rounded-xl text-sm font-black tracking-wide overflow-hidden md:px-16 md:py-5 md:rounded-2xl md:text-2xl"
             style={{
               background: "linear-gradient(155deg, #FFCF70 0%, #FFBD59 45%, #D4940F 100%)",
               color: "#0A0147",
               cursor: "pointer",
+              WebkitTapHighlightColor: "transparent",
             }}
           >
             {/* Shimmer sweep */}

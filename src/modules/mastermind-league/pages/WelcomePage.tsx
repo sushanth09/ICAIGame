@@ -81,7 +81,7 @@ const CARDS = [
         </motion.div>
       </div>
     ),
-    points: "10 pts",
+    points: "5 pts",
     time: "30s / Q",
     questions: "5 Qs",
   },
@@ -121,8 +121,8 @@ const CARDS = [
         </motion.div>
       </div>
     ),
-    points: "10 pts",
-    time: "20s / Q",
+    points: "5 pts",
+    time: "30s / Q",
     questions: "5 Qs",
   },
   {
@@ -144,9 +144,9 @@ const CARDS = [
         </motion.span>
       </div>
     ),
-    points: "5 pts",
+    points: "2 pts",
     time: "60s total",
-    questions: "10 Qs",
+    questions: "Max 25 Qs",
   },
 ] as const;
 

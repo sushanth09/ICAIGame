@@ -11,7 +11,12 @@ import { useChallengeAccess } from "../hooks/useChallengeAccess";
 import { addToLeaderboard, getLeaderboard } from "../services/leaderboardService";
 import { ENFORCE_SINGLE_PLAY } from "../services/registrationService";
 import { CHALLENGE_YEAR } from "../utils/challengeSchedule";
-import { round1Questions, round2Questions, round3Questions } from "../data/questions";
+import {
+  TOTAL_GAME_MAX_POINTS,
+  MAX_SCORE_ROUND_1,
+  MAX_SCORE_ROUND_2,
+  MAX_SCORE_ROUND_3_CAP,
+} from "../utils/scoring";
 import type { LeaderboardEntry } from "../types/gameTypes";
 import { useSoundEffects } from "../hooks/useSoundSystem";
 
@@ -24,12 +29,12 @@ const TROPHY_LOTTIE_SRC =
 const EASE = [0.33, 1, 0.68, 1] as const;
 
 const MAX_ROUND_SCORES = [
-  round1Questions.length * 10,
-  round2Questions.length * 10,
-  round3Questions.length * 5,
+  MAX_SCORE_ROUND_1,
+  MAX_SCORE_ROUND_2,
+  MAX_SCORE_ROUND_3_CAP,
 ] as const;
 
-const TOTAL_MAX = MAX_ROUND_SCORES[0] + MAX_ROUND_SCORES[1] + MAX_ROUND_SCORES[2];
+const TOTAL_MAX = TOTAL_GAME_MAX_POINTS;
 
 const ROUND_LABELS = [
   { name: "Analyst Arena", icon: "📊", color: "#FFBD59" },
@@ -38,8 +43,8 @@ const ROUND_LABELS = [
 ] as const;
 
 function getPlayerTitle(score: number) {
-  if (score >= 81) return { title: "Mastermind", icon: "🧠", color: "#E8E9E4" };
-  if (score >= 51) return { title: "Scholar", icon: "📚", color: "#FFBD59" };
+  if (score >= 66) return { title: "Mastermind", icon: "🧠", color: "#E8E9E4" };
+  if (score >= 33) return { title: "Scholar", icon: "📚", color: "#FFBD59" };
   return { title: "Rising Star", icon: "⭐", color: "#B1C9EB" };
 }
 

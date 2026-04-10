@@ -14,12 +14,17 @@ import type { AnswerFeedback } from "../components";
 import { round1Questions } from "../data/questions";
 import { useGameStore } from "../store/gameStore";
 import { validateRound1Answer, createAnswer } from "../engine/gameEngine";
+import { getPointsForRound, POINTS_ROUND_1 } from "../utils/scoring";
+import {
+  ROUND1_SEC_PER_QUESTION,
+  ROUND2_SEC_PER_QUESTION,
+} from "../constants/gameTiming";
 import { saveGameState } from "../services/gameService";
 import { useGameTimer } from "../hooks/useGameTimer";
 import { useTabSwitchDetection } from "../hooks/useTabSwitchDetection";
 import { useSoundEffects } from "../hooks/useSoundSystem";
 
-const TIME_PER_QUESTION = 30;
+const TIME_PER_QUESTION = ROUND1_SEC_PER_QUESTION;
 const FEEDBACK_DURATION_MS = 1600;
 const ROUND_SUMMARY_MS = 3000;
 
@@ -194,12 +199,12 @@ export function Round1Page() {
     setPhase("round2");
     setCurrentRound(2);
     setCurrentQuestionIndex(0);
-    setTimeRemaining(20);
+    setTimeRemaining(ROUND2_SEC_PER_QUESTION);
     saveGameState({
       phase: "round2",
       currentRound: 2,
       currentQuestionIndex: 0,
-      timeRemaining: 20,
+      timeRemaining: ROUND2_SEC_PER_QUESTION,
     });
   }, [score, setRoundScore, setPhase, setCurrentRound, setCurrentQuestionIndex, setTimeRemaining, playTransition]);
 
@@ -207,7 +212,7 @@ export function Round1Page() {
     setShowSummary(true);
   }, []);
 
-  useGameTimer(true, () => {
+  useGameTimer(!answered && !showSummary, () => {
     if (!answered && question) {
       setAnswered(true);
       setFeedback({ correct: false, points: 0 });
@@ -232,11 +237,11 @@ export function Round1Page() {
     if (answered) return;
     setAnswered(true);
     const correct = validateRound1Answer(question, answer);
-    const points = correct ? 10 : 0;
+    const points = correct ? getPointsForRound(1) : 0;
     addScore(points);
     setFeedback({ correct, points });
     createAnswer(question.id, answer, correct, 1);
-    saveGameState({ score: score + points });
+    saveGameState({ score: useGameStore.getState().score });
     if (correct) playCorrect(); else playWrong();
     setTimeout(() => {
       if (isLastQuestion) advanceRound();
@@ -277,14 +282,13 @@ export function Round1Page() {
         {showSummary && (
           <RoundSummaryOverlay
             score={score}
-            maxScore={totalQuestions * 10}
+            maxScore={totalQuestions * POINTS_ROUND_1}
             onDone={doAdvance}
           />
         )}
       </AnimatePresence>
 
-      <div className="w-full h-full overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
+      <div className="w-full max-w-3xl mx-auto px-4 py-5 pb-10 space-y-4 md:max-h-none">
         {/* Round header banner */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -337,7 +341,6 @@ export function Round1Page() {
             />
           </motion.div>
         </AnimatePresence>
-      </div>
       </div>
     </>
   );

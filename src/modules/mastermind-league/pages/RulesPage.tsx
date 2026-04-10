@@ -57,7 +57,7 @@ const ROUNDS = [
       "https://lottie.host/0fb673c5-6b2a-4cdb-984a-8269f2238c2f/ySHbHNZHti.lottie",
     questions: "Max 25",
     points: "2 pts each",
-    time: "30s / Q",
+    time: "60s total",
     accentColor: "rgba(177,201,235,0.8)",
     borderColor: "rgba(177,201,235,0.4)",
     glowColor: "rgba(177,201,235,0.3)",

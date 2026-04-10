@@ -230,13 +230,14 @@ export function QuestionCardMCQ({
             return (
               <div key={opt.id} className="relative" style={{ overflow: "visible" }}>
                 <motion.button
+                  type="button"
                   whileHover={disabled ? undefined : { y: -3, scale: 1.015 }}
                   whileTap={disabled ? undefined : { scale: 0.975, y: 0 }}
                   transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                   onClick={() => handleSelect(opt.id)}
                   disabled={disabled}
-                  className={`w-full text-left px-4 py-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${getCardStyle(opt.id)}`}
-                  style={{ cursor: disabled ? "default" : "pointer" }}
+                  className={`touch-manipulation w-full text-left px-4 py-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${getCardStyle(opt.id)}`}
+                  style={{ cursor: disabled ? "default" : "pointer", WebkitTapHighlightColor: "transparent" }}
                 >
                   {/* Letter badge */}
                   <span
@@ -517,13 +518,14 @@ export function QuestionCardMythFact({
         <div className="flex gap-4 relative" style={{ zIndex: 1 }}>
           {/* MYTH */}
           <motion.button
+            type="button"
             whileHover={disabled ? undefined : { y: -5, scale: 1.03 }}
             whileTap={disabled ? undefined : { scale: 0.96, y: 0 }}
             transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={() => handleSelect(false)}
             disabled={disabled}
-            className={`flex-1 py-6 px-4 rounded-2xl border-2 font-black text-xl transition-all duration-300 flex flex-col items-center justify-center gap-2.5 ${getCardStyle(false)}`}
-            style={{ cursor: disabled ? "default" : "pointer" }}
+            className={`touch-manipulation flex-1 py-6 px-4 rounded-2xl border-2 font-black text-xl transition-all duration-300 flex flex-col items-center justify-center gap-2.5 ${getCardStyle(false)}`}
+            style={{ cursor: disabled ? "default" : "pointer", WebkitTapHighlightColor: "transparent" }}
           >
             <span className={`text-3xl transition-colors duration-300 ${getIconColor(false)}`}>
               💭
@@ -555,13 +557,14 @@ export function QuestionCardMythFact({
 
           {/* FACT */}
           <motion.button
+            type="button"
             whileHover={disabled ? undefined : { y: -5, scale: 1.03 }}
             whileTap={disabled ? undefined : { scale: 0.96, y: 0 }}
             transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={() => handleSelect(true)}
             disabled={disabled}
-            className={`flex-1 py-6 px-4 rounded-2xl border-2 font-black text-xl transition-all duration-300 flex flex-col items-center justify-center gap-2.5 ${getCardStyle(true)}`}
-            style={{ cursor: disabled ? "default" : "pointer" }}
+            className={`touch-manipulation flex-1 py-6 px-4 rounded-2xl border-2 font-black text-xl transition-all duration-300 flex flex-col items-center justify-center gap-2.5 ${getCardStyle(true)}`}
+            style={{ cursor: disabled ? "default" : "pointer", WebkitTapHighlightColor: "transparent" }}
           >
             <span className={`text-3xl transition-colors duration-300 ${getIconColor(true)}`}>
               ✅

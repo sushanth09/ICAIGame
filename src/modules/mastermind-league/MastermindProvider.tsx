@@ -1,21 +1,36 @@
 "use client";
 
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import { LandingPage } from "./pages/LandingPage";
-import { RulesPage } from "./pages/RulesPage";
-import { StartGamePage } from "./pages/StartGamePage";
-import { Round1Page } from "./pages/Round1Page";
-import { Round2Page } from "./pages/Round2Page";
-import { Round3Page } from "./pages/Round3Page";
-import { ResultPage } from "./pages/ResultPage";
+import { ROUND1_SEC_PER_QUESTION } from "./constants/gameTiming";
 import { useGameStore } from "./store/gameStore";
 import { saveGameState } from "./services/gameService";
 import { useChallengeAccess } from "./hooks/useChallengeAccess";
 import { getSessionProfile } from "./services/registrationService";
 import type { PlayerProfile } from "./types/gameTypes";
 import { startGameBackgroundMusic } from "./audio/backgroundMusic";
+
+const RulesPage = dynamic(() =>
+  import("./pages/RulesPage").then((m) => ({ default: m.RulesPage }))
+);
+const StartGamePage = dynamic(() =>
+  import("./pages/StartGamePage").then((m) => ({ default: m.StartGamePage }))
+);
+const Round1Page = dynamic(() =>
+  import("./pages/Round1Page").then((m) => ({ default: m.Round1Page }))
+);
+const Round2Page = dynamic(() =>
+  import("./pages/Round2Page").then((m) => ({ default: m.Round2Page }))
+);
+const Round3Page = dynamic(() =>
+  import("./pages/Round3Page").then((m) => ({ default: m.Round3Page }))
+);
+const ResultPage = dynamic(() =>
+  import("./pages/ResultPage").then((m) => ({ default: m.ResultPage }))
+);
 
 export function MastermindProvider() {
   const phase = useGameStore((s) => s.phase);
@@ -52,7 +67,7 @@ export function MastermindProvider() {
       score: 0,
       currentRound: 1,
       currentQuestionIndex: 0,
-      timeRemaining: 30,
+      timeRemaining: ROUND1_SEC_PER_QUESTION,
       gameStarted: false,
       gameCompleted: false,
       disqualified: false,
@@ -62,7 +77,7 @@ export function MastermindProvider() {
       roundScores: [0, 0, 0],
       currentRound: 1,
       currentQuestionIndex: 0,
-      timeRemaining: 30,
+      timeRemaining: ROUND1_SEC_PER_QUESTION,
       gameStarted: false,
       gameCompleted: false,
       disqualified: false,
@@ -76,14 +91,14 @@ export function MastermindProvider() {
       phase: "round1",
       currentRound: 1,
       currentQuestionIndex: 0,
-      timeRemaining: 30,
+      timeRemaining: ROUND1_SEC_PER_QUESTION,
       gameStarted: true,
       score: 0,
       disqualified: false,
     });
     useGameStore.setState({
       gameStarted: true,
-      timeRemaining: 30,
+      timeRemaining: ROUND1_SEC_PER_QUESTION,
     });
   };
 

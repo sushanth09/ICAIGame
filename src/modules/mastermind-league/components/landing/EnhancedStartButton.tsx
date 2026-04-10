@@ -87,8 +87,9 @@ export function EnhancedStartButton({
               fontFamily: "var(--font-poppins), sans-serif",
               letterSpacing: "0.06em",
               fontWeight: 600,
+              WebkitTapHighlightColor: "transparent",
             }}
-            className={`relative z-10 px-14 py-5 rounded-xl text-xl transition-colors duration-300 ${
+            className={`relative z-10 touch-manipulation px-8 py-3.5 rounded-xl text-base transition-colors duration-300 md:px-14 md:py-5 md:text-xl ${
               disabled
                 ? "bg-gray-700 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-b from-[#F6C453] to-[#D4920A] text-[#0D0D0D] cursor-pointer shadow-xl hover:from-[#FFD470] hover:to-[#E6A010]"

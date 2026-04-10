@@ -117,6 +117,39 @@ body {
   50%       { opacity: 1; transform: scaleX(1.02); }
 }
 
+/* Gold title shimmer — animates background-position so only clipped text shines */
+@keyframes mastermind-title-shine {
+  0%,
+  35% {
+    background-position: 120% center;
+  }
+  50% {
+    background-position: -20% center;
+  }
+  100% {
+    background-position: -20% center;
+  }
+}
+
+.mastermind-title-gold {
+  background: linear-gradient(
+    105deg,
+    #f6c453 0%,
+    #ffb347 35%,
+    #fff6d4 48%,
+    #ffb347 52%,
+    #f6c453 65%,
+    #f6c453 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: mastermind-title-shine 9s ease-in-out infinite;
+  animation-delay: 4.2s;
+}
+
 /* === UTILITY CLASSES === */
 
 .text-glow-yellow {
